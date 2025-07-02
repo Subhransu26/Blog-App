@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import DarkModeToggle from "../components/DarkModeToggle";
+import toast from "react-hot-toast";
 
 function AuthForm({ type }) {
   const isLogin = type === "login";
@@ -41,23 +43,17 @@ function AuthForm({ type }) {
       return;
     }
 
-    const endpoint = isLogin
-      ? "http://localhost:3000/api/v1/login"
-      : "http://localhost:3000/api/v1/signup";
-
     try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await response.json();
-      console.log(result);
-      alert(`${isLogin ? "Login" : "Signup"} successful!`);
+      const res = await axios.post(
+        `http://localhost:3000/api/v1/${type}`,
+        formData
+      );
+      console.log(res);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("token", JSON.stringify(res.data.token));
+      toast.success(res.data.message);
     } catch (error) {
-      console.error(error);
-      alert("Something went wrong. Please try again.");
+      toast.error(error.response?.data?.message || "Something went wrong.");
     }
   };
 
