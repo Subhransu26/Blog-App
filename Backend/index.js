@@ -4,9 +4,11 @@ const { PORT } = require("./config/dotenv.config");
 const userRoutes = require("./routes/userRoutes");
 const blogRoutes = require("./routes/blogRoutes");
 const cloudinaryConfig = require("./config/cloudinaryConfig");
+const cors = require("cors");
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 const port = PORT || 5000;
