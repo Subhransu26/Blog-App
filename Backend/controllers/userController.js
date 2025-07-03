@@ -75,7 +75,6 @@ async function createUser(req, res) {
       message: "User Created Successfully",
       success: true,
       user: {
-        id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         username: newUser.username,
@@ -83,7 +82,6 @@ async function createUser(req, res) {
       token,
     });
   } catch (error) {
-    console.error("Error creating user:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -145,7 +143,6 @@ async function login(req, res) {
       success: true,
       message: "Login successful",
       user: {
-        id: checkUser._id,
         name: checkUser.name,
         email: checkUser.email,
         profilePic: checkUser.profilePic,

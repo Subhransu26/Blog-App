@@ -18,5 +18,18 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      addUtilities({
+        ".scrollbar-hidden": {
+          /* For Webkit-based browsers (Chrome, Safari) */
+          "-ms-overflow-style": "none", /* IE and Edge */
+          "scrollbar-width": "none", /* Firefox */
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+        },
+      });
+    },
+  ],
 };

@@ -12,6 +12,8 @@ function Navbar() {
     { name: "About", path: "/about" },
   ];
 
+  const user = JSON.parse(localStorage.getItem("user")); // or from context
+
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-white dark:bg-gray-900 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -41,18 +43,32 @@ function Navbar() {
             </NavLink>
           ))}
 
-          <Link
-            to="/login"
-            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-medium"
-          >
-            Login
-          </Link>
-          <Link
-            to="/signup"
-            className="bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600 text-sm font-medium"
-          >
-            Sign Up
-          </Link>
+          {/* + Create button (only if logged in) */}
+          {user && (
+            <Link
+              to="/add-blog"
+              className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl font-semibold shadow text-sm"
+            >
+              + Create
+            </Link>
+          )}
+
+          {!user && (
+            <>
+              <Link
+                to="/login"
+                className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-medium"
+              >
+                Login
+              </Link>
+              <Link
+                to="/signup"
+                className="bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600 text-sm font-medium"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
 
           <DarkModeToggle />
         </div>
@@ -90,20 +106,35 @@ function Navbar() {
               </NavLink>
             ))}
 
-            <Link
-              to="/login"
-              onClick={() => setMenuOpen(false)}
-              className="block w-full bg-purple-600 text-white text-center py-2 rounded-md font-medium"
-            >
-              Login
-            </Link>
-            <Link
-              to="/signup"
-              onClick={() => setMenuOpen(false)}
-              className="block w-full bg-pink-500 text-white text-center py-2 rounded-md font-medium"
-            >
-              Sign Up
-            </Link>
+            {/* + Create for mobile */}
+            {user && (
+              <Link
+                to="/add-blog"
+                onClick={() => setMenuOpen(false)}
+                className="block w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white text-center py-2 rounded-md font-semibold"
+              >
+                + Create
+              </Link>
+            )}
+
+            {!user && (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="block w-full bg-purple-600 text-white text-center py-2 rounded-md font-medium"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setMenuOpen(false)}
+                  className="block w-full bg-pink-500 text-white text-center py-2 rounded-md font-medium"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

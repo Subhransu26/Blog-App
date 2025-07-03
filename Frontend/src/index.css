@@ -8,3 +8,24 @@ html, body, #root {
 body {
   @apply m-0 p-0 box-border;
 }
+
+body {
+  overflow-y: scroll;
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* Internet Explorer 10+ */
+}
+
+body::-webkit-scrollbar {
+  display: none;               /* Chrome, Safari */
+}
+
+/* Hide scrollbar but allow scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+
+
