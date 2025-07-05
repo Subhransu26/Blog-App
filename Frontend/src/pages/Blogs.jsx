@@ -6,7 +6,7 @@ const Blogs = () => {
   const [blogs, setBlogs] = useState([]);
 
   async function fetchBlogs() {
-    const res = await axios.get("http://localhost:3000/api/v1/blogs");
+    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/blogs`);
     setBlogs(res.data.blogs);
   }
 

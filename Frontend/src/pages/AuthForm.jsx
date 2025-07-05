@@ -45,7 +45,7 @@ function AuthForm({ type }) {
 
     try {
       const res = await axios.post(
-        `http://localhost:3000/api/v1/${type}`,
+        `${import.meta.env.VITE_BACKEND_URL}/${type}`,
         formData
       );
       console.log(res);

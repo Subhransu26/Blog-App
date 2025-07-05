@@ -8,8 +8,8 @@ import BlogDetail from "./pages/BlogDetail";
 
 function App() {
   return (
-    <div className="pt-10 overflow-auto scrollbar-none"> {/* top padding to account for fixed navbar */}
-      <Navbar /> {/* Always visible */}
+    <div className="pt-10 overflow-auto scrollbar-none"> 
+      <Navbar /> 
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<AuthForm type="login" />} />

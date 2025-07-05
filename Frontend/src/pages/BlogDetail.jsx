@@ -10,7 +10,9 @@ const BlogDetail = () => {
 
   const fetchBlog = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/v1/blogs/${id}`);
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`
+      );
       setBlog(res.data.blog);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to load blog");
