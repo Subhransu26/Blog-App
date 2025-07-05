@@ -43,7 +43,6 @@ function Navbar() {
             </NavLink>
           ))}
 
-          {/* + Create button (only if logged in) */}
           {user && (
             <Link
               to="/add-blog"
@@ -73,22 +72,24 @@ function Navbar() {
           <DarkModeToggle />
         </div>
 
-        {/* Mobile Menu Button */}
-        <div className="md:hidden flex items-center gap-3">
-          <DarkModeToggle />
+        {/* Mobile Menu + Dark Mode Buttons */}
+        <div className="md:hidden flex items-center justify-end space-x-3 w-auto">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="text-gray-800 dark:text-gray-100 focus:outline-none"
+            className="text-gray-800 dark:text-gray-100"
+            aria-label="Toggle menu"
           >
             {menuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
+
+          <DarkModeToggle />
         </div>
       </div>
 
-      {/* Mobile Nav */}
+      {/* Mobile Nav Dropdown */}
       {menuOpen && (
-        <div className="md:hidden overflow-hidden transition-all duration-300 ease-in-out">
-          <div className="px-6 pb-6 pt-2 space-y-4 bg-white dark:bg-gray-900">
+        <div className="absolute top-full left-0 w-full z-40 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-md transition-all duration-300 ease-in-out">
+          <div className="px-6 pb-6 pt-4 space-y-4">
             {navLinks.map((link) => (
               <NavLink
                 key={link.name}
@@ -106,7 +107,6 @@ function Navbar() {
               </NavLink>
             ))}
 
-            {/* + Create for mobile */}
             {user && (
               <Link
                 to="/add-blog"

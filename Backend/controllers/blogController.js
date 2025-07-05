@@ -41,6 +41,13 @@ async function createBlog(req, res) {
       });
     }
 
+    if (!image) {
+      return res.status(400).json({
+        success: false,
+        message: "Thumbnail image is required.",
+      });
+    }
+
     if (!content || !Array.isArray(content.blocks)) {
       return res.status(400).json({
         success: false,
@@ -56,18 +63,25 @@ async function createBlog(req, res) {
       const block = content.blocks[i];
 
       if (block.type === "image") {
-        const { secure_url, public_id } = await uploadImage(
-          `data:image/jpeg;base64,${images[imageIndex].buffer.toString(
-            "base64"
-          )}`
-        );
+        if (images[imageIndex]) {
+          const { secure_url, public_id } = await uploadImage(
+            `data:image/jpeg;base64,${images[imageIndex].buffer.toString(
+              "base64"
+            )}`
+          );
 
-        block.data.file = {
-          url: secure_url,
-          imageId: public_id,
-        };
+          block.data.file = {
+            url: secure_url,
+            imageId: public_id,
+          };
 
-        imageIndex++;
+          imageIndex++;
+        } else {
+          block.data.file = {
+            url: "",
+            imageId: "",
+          };
+        }
       }
     }
 
@@ -168,13 +182,18 @@ async function getBlogs(req, res) {
 async function getBlog(req, res) {
   try {
     const { id } = req.params;
-    const blog = await Blog.findOne({ blogId: id }).populate({
-      path: "comments",
-      populate: {
-        path: "user",
-        select: "name email username",
-      },
-    });
+    const blog = await Blog.findOne({ blogId: id })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "user",
+          select: "name email username",
+        },
+      })
+      .populate({
+        path: "creator",
+        select: "name username",
+      });
 
     if (!blog) {
       return res.status(404).json({
@@ -188,6 +207,7 @@ async function getBlog(req, res) {
       blog,
     });
   } catch (error) {
+    console.error("Error in getBlog:", error); // Add this
     res.status(500).json({
       success: false,
       message: error.message,

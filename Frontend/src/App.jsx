@@ -4,6 +4,7 @@ import Navbar from "./components/NavBar";
 import About from "./pages/About"; 
 import Blogs from "./pages/Blogs";
 import AddBlog from "./pages/AddBlog";
+import BlogDetail from "./pages/BlogDetail";
 
 function App() {
   return (
@@ -12,10 +13,12 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<AuthForm type="login" />} />
-        <Route path="/" element={<AuthForm type="signup" />} />
+        <Route path="/signup" element={<AuthForm type="signup" />} />
         <Route path="/about" element={<About />} />
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/add-blog" element={<AddBlog />} />
+        <Route path="/blogs/:id" element={<BlogDetail />} />
+
 
       </Routes>
     </div>
