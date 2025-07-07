@@ -4,20 +4,36 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import Spinner from "../components/Common/Spinner";
+import { useDispatch, useSelector } from "react-redux";
+import { addSelectedBlog } from "../utils/selectedBlogSlice";
 
 const BlogDetail = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const {
+    token,
+    email,
+    _id: userId,
+    profilePic,
+    following,
+  } = useSelector((state) => state.user);
+
+  // const { likes, comments, content, creator } = useSelector(
+  //   (state) => state.selectedBlog
+  // );
+
   const { id } = useParams();
   const [blog, setBlog] = useState(null);
-
   const [loading, setLoading] = useState(true);
+
+  const dispatch = useDispatch();
 
   const fetchBlog = async () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`
       );
-      setBlog(res.data.blog);
+      const fetchedBlog = res.data.blog;
+      setBlog(fetchedBlog);
+      dispatch(addSelectedBlog(fetchedBlog));
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to load blog");
     } finally {
@@ -150,20 +166,21 @@ const BlogDetail = () => {
             <p className="text-gray-500 dark:text-gray-400">No comments yet.</p>
           )}
         </section>
-
         {/* Edit */}
-
-        {user.email == blog.creator.email && (
-          <div className="mt-6 mb-6 flex justify-start">
-            <Link
-              to={`/edit-blog/${blog.blogId}`}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
-            >
-              <span className="text-xl">✏️</span>
-              <span>Edit Blog</span>
-            </Link>
-          </div>
-        )}
+        {token &&
+          userId &&
+          blog?.creator?._id &&
+          userId === blog.creator._id && (
+            <div className="mt-6 mb-6 flex justify-start">
+              <Link
+                to={`/edit-blog/${blog.blogId}`}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <span className="text-xl">✏️</span>
+                <span>Edit Blog</span>
+              </Link>
+            </div>
+          )}
       </div>
     </div>
   );

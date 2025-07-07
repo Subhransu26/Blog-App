@@ -75,11 +75,12 @@ async function createUser(req, res) {
       message: "User Created Successfully",
       success: true,
       user: {
+        _id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         username: newUser.username,
+        token,
       },
-      token,
     });
   } catch (error) {
     return res.status(500).json({
@@ -143,6 +144,7 @@ async function login(req, res) {
       success: true,
       message: "Login successful",
       user: {
+        _id: checkUser._id,
         name: checkUser.name,
         email: checkUser.email,
         profilePic: checkUser.profilePic,
@@ -152,8 +154,8 @@ async function login(req, res) {
         showSavedBlogs: checkUser.showSavedBlogs,
         followers: checkUser.followers,
         following: checkUser.following,
+        token,
       },
-      token,
     });
   } catch (error) {
     console.error("Error during login:", error);

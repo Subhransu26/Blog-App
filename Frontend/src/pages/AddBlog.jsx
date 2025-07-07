@@ -1,10 +1,14 @@
 import axios from "axios";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Navigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const AddBlog = () => {
-  const token = JSON.parse(localStorage.getItem("token"));
+  const token = useSelector((slice) => slice.user);
+  const { title, description, image, content, draft, tags } = useSelector(
+    (slice) => slice.selectedBlog
+  );
 
   const [loading, setLoading] = useState(false);
 
@@ -17,6 +21,9 @@ const AddBlog = () => {
     images: [],
     draft: false,
   });
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     const { name, value, files, type } = e.target;
@@ -38,7 +45,6 @@ const AddBlog = () => {
 
   const handlePostBlog = async () => {
     setLoading(true);
-
     const formData = new FormData();
 
     formData.append("title", blogData.title);
@@ -72,7 +78,7 @@ const AddBlog = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/v1/blogs",
+        `${import.meta.env.VITE_BACKEND_URL}/blogs`,
         formData,
         {
           headers: {
@@ -83,6 +89,7 @@ const AddBlog = () => {
       );
 
       toast.success(res.data.message);
+
       // Optional: reset form
       setBlogData({
         title: "",
@@ -93,9 +100,12 @@ const AddBlog = () => {
         images: [],
         draft: false,
       });
+
+      navigate("/blogs");
     } catch (error) {
       const message = error?.response?.data?.message || "Something went wrong.";
       toast.error(message);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
     }

@@ -3,11 +3,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Spinner from "../components/Common/Spinner";
+import { useSelector } from "react-redux";
 
 const EditBlog = () => {
+  const token = useSelector((state) => state.user?.token);
+
   const { id } = useParams();
+
   const navigate = useNavigate();
-  const token = JSON.parse(localStorage.getItem("token"));
 
   const [blogData, setBlogData] = useState({
     title: "",
@@ -57,9 +60,31 @@ const EditBlog = () => {
     }
   };
 
+  const selectedBlog = useSelector((state) => state.selectedBlog.selectedBlog);
+
   useEffect(() => {
-    fetchBlog();
-  }, [id]);
+    if (!selectedBlog || selectedBlog._id !== id) {
+      fetchBlog(); // fallback only
+    } else {
+      const blog = selectedBlog;
+      setBlogData({
+        title: blog.title,
+        description: blog.description,
+        tags: blog.tags.join(", "),
+        content: JSON.stringify(blog.content, null, 2),
+        draft: blog.draft,
+        image: null,
+        images: [],
+      });
+      setExistingThumb(blog.image || "");
+
+      const inlineImages = blog.content.blocks
+        .filter((block) => block.type === "image" && block.data?.file?.url)
+        .map((block) => block.data.file.url);
+      setExistingInlineImages(inlineImages);
+      setLoading(false);
+    }
+  }, [id, selectedBlog]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -117,10 +142,7 @@ const EditBlog = () => {
     }
   };
 
-  if (loading)
-    return (
-      <Spinner message="Fetching blog details..." />
-    );
+  if (loading) return <Spinner message="Fetching blog details..." />;
 
   return (
     <div className="min-h-screen px-4 py-10 bg-white dark:bg-gray-900 transition duration-300 text-gray-800 dark:text-white">
