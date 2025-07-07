@@ -6,6 +6,8 @@ import { Navigate } from "react-router-dom";
 const AddBlog = () => {
   const token = JSON.parse(localStorage.getItem("token"));
 
+  const [loading, setLoading] = useState(false);
+
   const [blogData, setBlogData] = useState({
     title: "",
     description: "",
@@ -35,6 +37,8 @@ const AddBlog = () => {
   };
 
   const handlePostBlog = async () => {
+    setLoading(true);
+
     const formData = new FormData();
 
     formData.append("title", blogData.title);
@@ -45,6 +49,7 @@ const AddBlog = () => {
       formData.append("content", JSON.stringify(parsedContent));
     } catch (err) {
       toast.error("Content must be valid JSON.");
+      setLoading(false);
       return;
     }
 
@@ -53,7 +58,6 @@ const AddBlog = () => {
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
     formData.append("tags", JSON.stringify(tagArray));
-
     formData.append("draft", blogData.draft);
 
     if (blogData.image) {
@@ -79,9 +83,21 @@ const AddBlog = () => {
       );
 
       toast.success(res.data.message);
+      // Optional: reset form
+      setBlogData({
+        title: "",
+        description: "",
+        content: "",
+        tags: "",
+        image: null,
+        images: [],
+        draft: false,
+      });
     } catch (error) {
       const message = error?.response?.data?.message || "Something went wrong.";
       toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -249,10 +265,20 @@ const AddBlog = () => {
         {/* Submit Button */}
         <div className="pt-4 text-center">
           <button
-            className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-300"
             onClick={handlePostBlog}
+            disabled={loading}
+            className={`w-full min-w-[150px] h-12 flex justify-center items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+              loading ? "opacity-80 cursor-not-allowed" : ""
+            }`}
           >
-            Submit Blog
+            {loading ? (
+              <>
+                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Posting...
+              </>
+            ) : (
+              "Submit Blog"
+            )}
           </button>
         </div>
       </div>

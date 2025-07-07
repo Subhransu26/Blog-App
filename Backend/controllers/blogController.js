@@ -224,8 +224,15 @@ async function updateBlog(req, res) {
     const { id } = req.params;
     const { title, description } = req.body;
 
-    const content = JSON.parse(req.body.content || "{}");
-    const tags = JSON.parse(req.body.tags || "[]");
+    const content =
+      typeof req.body.content === "string"
+        ? JSON.parse(req.body.content)
+        : req.body.content;
+
+    const tags =
+      typeof req.body.tags === "string"
+        ? JSON.parse(req.body.tags)
+        : req.body.tags;
 
     const newImage = req.files?.image?.[0]; // Thumbnail
     const newImages = req.files?.images || []; // Content images
@@ -234,7 +241,7 @@ async function updateBlog(req, res) {
       req.body.draft === "false" || req.body.draft === false ? false : true;
 
     // Find Blog by ID
-    const blog = await Blog.findOne({ blogId: id });
+    const blog = await Blog.findOne({ blogId: req.params.id });
 
     if (!blog) {
       return res.status(404).json({
@@ -261,18 +268,20 @@ async function updateBlog(req, res) {
       const block = content.blocks[i];
 
       if (block.type === "image") {
-        const { secure_url, public_id } = await uploadImage(
-          `data:image/jpeg;base64,${newImages[imageIndex].buffer.toString(
-            "base64"
-          )}`
-        );
+        const file = newImages[imageIndex];
 
-        block.data.file = {
-          url: secure_url,
-          imageId: public_id,
-        };
+        if (file) {
+          const { secure_url, public_id } = await uploadImage(
+            `data:image/jpeg;base64,${file.buffer.toString("base64")}`
+          );
 
-        imageIndex++;
+          block.data.file = {
+            url: secure_url,
+            imageId: public_id,
+          };
+
+          imageIndex++;
+        }
       }
     }
 

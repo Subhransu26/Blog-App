@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 const BlogDetail = () => {
   const { id } = useParams();
@@ -53,7 +54,7 @@ const BlogDetail = () => {
               <img
                 src={block.data.file.url}
                 alt="Blog content"
-                className="rounded-xl shadow-md max-w-full sm:max-w-3xl object-contain"
+                className="rounded-xl shadow-md max-w-full max-h-[70vh] object-contain"
               />
             </div>
           );
@@ -99,7 +100,6 @@ const BlogDetail = () => {
             {Math.ceil(blog.content?.blocks?.length / 3) || 2} min read
           </span>
         </div>
-
         {/* Tags */}
         {blog.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
@@ -113,23 +113,20 @@ const BlogDetail = () => {
             ))}
           </div>
         )}
-
         {/* Thumbnail */}
         {blog.image && (
-          <div className="w-full aspect-video rounded-xl shadow-lg overflow-hidden mb-10">
+          <div className="w-full max-w-4xl mx-auto rounded-xl overflow-hidden mb-10">
             <img
               src={blog.image}
               alt="Blog thumbnail"
-              className="w-full h-full object-cover"
+              className="w-full max-h-[70vh] object-contain mx-auto"
             />
           </div>
         )}
-
         {/* Blog Body */}
         <article className="prose dark:prose-invert prose-lg max-w-none">
           {renderContent(blog.content)}
         </article>
-
         {/* Comments Section */}
         <section className="mt-16">
           <h2 className="text-2xl font-bold mb-4">Comments</h2>
@@ -154,6 +151,17 @@ const BlogDetail = () => {
             <p className="text-gray-500 dark:text-gray-400">No comments yet.</p>
           )}
         </section>
+
+        {/* Edit */}
+        <div className="mt-6 mb-6 flex justify-start">
+          <Link
+            to={`/edit-blog/${blog.blogId}`}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
+          >
+            <span className="text-xl">✏️</span>
+            <span>Edit Blog</span>
+          </Link>
+        </div>
       </div>
     </div>
   );
