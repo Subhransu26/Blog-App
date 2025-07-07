@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import Spinner from "../components/Common/Spinner";
 
 const EditBlog = () => {
   const { id } = useParams();
@@ -24,6 +25,7 @@ const EditBlog = () => {
   const [newInline, setNewInline] = useState([]);
 
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchBlog = async () => {
     try {
@@ -46,6 +48,8 @@ const EditBlog = () => {
         .filter((block) => block.type === "image" && block.data?.file?.url)
         .map((block) => block.data.file.url);
       setExistingInlineImages(inlineImages);
+
+      // eslint-disable-next-line no-unused-vars
     } catch (error) {
       toast.error("Failed to load blog");
     } finally {
@@ -78,6 +82,7 @@ const EditBlog = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
 
     const formData = new FormData();
     formData.append("title", blogData.title);
@@ -107,14 +112,14 @@ const EditBlog = () => {
       navigate(`/blogs/${res.data.blog.blogId}`);
     } catch (err) {
       toast.error(err.response?.data?.message || "Update failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   if (loading)
     return (
-      <p className="p-6 text-center text-gray-600 dark:text-gray-300">
-        Loading...
-      </p>
+      <Spinner message="Fetching blog details..." />
     );
 
   return (
@@ -262,17 +267,19 @@ const EditBlog = () => {
             <label>Save as Draft</label>
           </div>
 
+          {/* Update Button */}
           <button
             type="submit"
-            className={`bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-200 ${
-              loading ? "opacity-80 cursor-not-allowed" : ""
+            disabled={submitting}
+            className={`flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-200 ${
+              submitting ? "opacity-80 cursor-not-allowed" : ""
             }`}
           >
-            {loading ? (
-              <>
-                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+            {submitting ? (
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Updating...
-              </>
+              </div>
             ) : (
               "Update Blog"
             )}

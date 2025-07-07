@@ -3,10 +3,13 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
+import Spinner from "../components/Common/Spinner";
 
 const BlogDetail = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
   const { id } = useParams();
   const [blog, setBlog] = useState(null);
+
   const [loading, setLoading] = useState(true);
 
   const fetchBlog = async () => {
@@ -66,11 +69,7 @@ const BlogDetail = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <p className="text-gray-700 dark:text-white text-lg">Loading blog...</p>
-      </div>
-    );
+    return <Spinner message="Loading blog..." />;
   }
 
   if (!blog) {
@@ -153,15 +152,18 @@ const BlogDetail = () => {
         </section>
 
         {/* Edit */}
-        <div className="mt-6 mb-6 flex justify-start">
-          <Link
-            to={`/edit-blog/${blog.blogId}`}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
-          >
-            <span className="text-xl">✏️</span>
-            <span>Edit Blog</span>
-          </Link>
-        </div>
+
+        {user.email == blog.creator.email && (
+          <div className="mt-6 mb-6 flex justify-start">
+            <Link
+              to={`/edit-blog/${blog.blogId}`}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              <span className="text-xl">✏️</span>
+              <span>Edit Blog</span>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

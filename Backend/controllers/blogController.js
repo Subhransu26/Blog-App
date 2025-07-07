@@ -192,7 +192,7 @@ async function getBlog(req, res) {
       })
       .populate({
         path: "creator",
-        select: "name username",
+        select: "name username email",
       });
 
     if (!blog) {
