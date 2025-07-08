@@ -52,11 +52,11 @@ function AuthForm({ type }) {
         `${import.meta.env.VITE_BACKEND_URL}/${type}`,
         formData
       );
-      // console.log(res);
-      dispatch(login(res.data.user));
+      const { user, token, message } = res.data;
+      dispatch(login({ user, token }));
       // localStorage.setItem("user", JSON.stringify(res.data.user));
       // localStorage.setItem("token", JSON.stringify(res.data.token));
-      toast.success(res.data.message);
+      toast.success(message);
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong.");
     }

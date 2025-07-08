@@ -74,12 +74,12 @@ async function createUser(req, res) {
     return res.status(200).json({
       message: "User Created Successfully",
       success: true,
+      token,
       user: {
         _id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         username: newUser.username,
-        token,
       },
     });
   } catch (error) {
@@ -143,6 +143,7 @@ async function login(req, res) {
     return res.status(200).json({
       success: true,
       message: "Login successful",
+      token,
       user: {
         _id: checkUser._id,
         name: checkUser.name,
@@ -154,7 +155,6 @@ async function login(req, res) {
         showSavedBlogs: checkUser.showSavedBlogs,
         followers: checkUser.followers,
         following: checkUser.following,
-        token,
       },
     });
   } catch (error) {

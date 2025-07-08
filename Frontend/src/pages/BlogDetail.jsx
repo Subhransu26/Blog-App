@@ -15,14 +15,20 @@ const BlogDetail = () => {
     profilePic,
     following,
   } = useSelector((state) => state.user);
+  console.log("token:", token);
 
   // const { likes, comments, content, creator } = useSelector(
   //   (state) => state.selectedBlog
   // );
 
   const { id } = useParams();
+
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  console.log("User id :- " + userId);
+  console.log("blog creator id :- " + blog?.creator?._id);
+  console.log("token:- " + token);
 
   const dispatch = useDispatch();
 

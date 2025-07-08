@@ -64,7 +64,7 @@ const EditBlog = () => {
 
   useEffect(() => {
     if (!selectedBlog || selectedBlog._id !== id) {
-      fetchBlog(); // fallback only
+      fetchBlog();
     } else {
       const blog = selectedBlog;
       setBlogData({
@@ -110,6 +110,7 @@ const EditBlog = () => {
     setSubmitting(true);
 
     const formData = new FormData();
+
     formData.append("title", blogData.title);
     formData.append("description", blogData.description);
     formData.append(
