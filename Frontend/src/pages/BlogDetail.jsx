@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
 import Spinner from "../components/Common/Spinner";
-import { useDispatch, useSelector } from "react-redux";
-import { addSelectedBlog } from "../utils/selectedBlogSlice";
+import {
+  addSelectedBlog,
+  changeLikes,
+  removeSelectedBlog,
+} from "../utils/selectedBlogSlice";
 
 const BlogDetail = () => {
+  const { id } = useParams();
+  const dispatch = useDispatch();
+
   const {
     token,
     email,
@@ -15,31 +21,28 @@ const BlogDetail = () => {
     profilePic,
     following,
   } = useSelector((state) => state.user);
-  console.log("token:", token);
 
-  // const { likes, comments, content, creator } = useSelector(
-  //   (state) => state.selectedBlog
-  // );
-
-  const { id } = useParams();
+  const { likes, comments, content, creator } = useSelector(
+    (state) => state.selectedBlog
+  );
 
   const [blog, setBlog] = useState(null);
+
   const [loading, setLoading] = useState(true);
 
-  console.log("User id :- " + userId);
-  console.log("blog creator id :- " + blog?.creator?._id);
-  console.log("token:- " + token);
-
-  const dispatch = useDispatch();
+  const [isLike, setIsLike] = useState(false);
 
   const fetchBlog = async () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`
       );
+
       const fetchedBlog = res.data.blog;
       setBlog(fetchedBlog);
       dispatch(addSelectedBlog(fetchedBlog));
+
+      setIsLike(fetchedBlog.likes.includes(userId));
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to load blog");
     } finally {
@@ -47,8 +50,45 @@ const BlogDetail = () => {
     }
   };
 
+  // Handle Like
+  const handleLike = async () => {
+    if (!token) return toast.error("Please sign in to like this blog");
+
+    setIsLike((prev) => !prev);
+
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/blogs/like/${blog.blogId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      dispatch(changeLikes(userId));
+      toast.success(res.data.message);
+      setBlog((prevBlog) => {
+        const updatedLikes = isLike
+          ? prevBlog.likes.filter((id) => id !== userId)
+          : [...prevBlog.likes, userId]; 
+
+        return {
+          ...prevBlog,
+          likes: updatedLikes, 
+        };
+      });
+    } catch (err) {
+      toast.error("Failed to like blog");
+      // setIsLike((prev) => !prev);
+    }
+  };
+
   useEffect(() => {
     fetchBlog();
+    return () => {
+      dispatch(removeSelectedBlog());
+    };
   }, [id]);
 
   const renderContent = (content) => {
@@ -71,19 +111,17 @@ const BlogDetail = () => {
               {block.data.text}
             </p>
           );
-        case "image": {
+        case "image":
           const imageUrl = block.data?.file?.url;
-          if (!imageUrl) return null;
-          return (
+          return imageUrl ? (
             <div key={idx} className="w-full my-8 flex justify-center">
               <img
-                src={block.data.file.url}
+                src={imageUrl}
                 alt="Blog content"
                 className="rounded-xl shadow-md max-w-full max-h-[70vh] object-contain"
               />
             </div>
-          );
-        }
+          ) : null;
         default:
           return null;
       }
@@ -113,7 +151,6 @@ const BlogDetail = () => {
           <span className="font-medium">
             {blog.creator?.name || blog.creator?.username || "Anonymous"}
           </span>
-
           <span>·</span>
           <span>{new Date(blog.createdAt).toLocaleDateString()}</span>
           <span>·</span>
@@ -121,6 +158,7 @@ const BlogDetail = () => {
             {Math.ceil(blog.content?.blocks?.length / 3) || 2} min read
           </span>
         </div>
+
         {/* Tags */}
         {blog.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
@@ -134,6 +172,47 @@ const BlogDetail = () => {
             ))}
           </div>
         )}
+
+        {/* Like & Comment */}
+        <hr className="border-t border-gray-400 dark:border-gray-700 " />
+
+        <div className="flex justify-between items-center pt-4 text-gray-500 dark:text-gray-400 text-sm">
+          <div className="flex items-center gap-6">
+            {/* Like */}
+            <div
+              onClick={handleLike}
+              className="flex items-center gap-1 cursor-pointer hover:text-black dark:hover:text-white transition"
+            >
+              <i
+                className={`${
+                  isLike ? "fi fi-sr-heart text-red-500" : "fi fi-rr-heart"
+                } text-lg`}
+              ></i>
+              <span className="ml-1">
+                {blog.likes.length >= 1000
+                  ? `${(blog.likes.length / 1000).toFixed(1)}K`
+                  : blog.likes.length}
+              </span>
+            </div>
+
+            {/* Comments */}
+            <div className="flex items-center gap-1 cursor-pointer hover:text-black dark:hover:text-white transition">
+              <i className="fi fi-rr-comment text-lg"></i>
+              <span className="ml-1">{blog.comments?.length || 0}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-6">
+            <i className="fi fi-rr-bookmark-add text-lg cursor-pointer hover:text-black dark:hover:text-white transition"></i>
+            <i className="fi fi-rr-play text-lg cursor-pointer hover:text-black dark:hover:text-white transition"></i>
+            <i className="fi fi-rr-share text-lg cursor-pointer hover:text-black dark:hover:text-white transition"></i>
+            <i className="fi fi-rr-menu-dots-vertical text-lg cursor-pointer hover:text-black dark:hover:text-white transition"></i>
+          </div>
+        </div>
+
+        <hr className="border-t border-gray-400 dark:border-gray-700 my-4" />
+
         {/* Thumbnail */}
         {blog.image && (
           <div className="w-full max-w-4xl mx-auto rounded-xl overflow-hidden mb-10">
@@ -144,49 +223,24 @@ const BlogDetail = () => {
             />
           </div>
         )}
-        {/* Blog Body */}
+
+        {/* Content */}
         <article className="prose dark:prose-invert prose-lg max-w-none">
           {renderContent(blog.content)}
         </article>
-        {/* Comments Section */}
-        <section className="mt-16">
-          <h2 className="text-2xl font-bold mb-4">Comments</h2>
-          {blog.comments?.length > 0 ? (
-            blog.comments.map((comment, idx) => (
-              <div
-                key={idx}
-                className="border border-gray-300 dark:border-gray-700 rounded-xl p-4 mb-4 bg-white dark:bg-gray-800"
-              >
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  <span className="font-semibold">
-                    {comment.user?.name || "User"}
-                  </span>{" "}
-                  @{comment.user?.username || "unknown"}
-                </p>
-                <p className="text-gray-800 dark:text-gray-200">
-                  {comment.text}
-                </p>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400">No comments yet.</p>
-          )}
-        </section>
-        {/* Edit */}
-        {token &&
-          userId &&
-          blog?.creator?._id &&
-          userId === blog.creator._id && (
-            <div className="mt-6 mb-6 flex justify-start">
-              <Link
-                to={`/edit-blog/${blog.blogId}`}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
-              >
-                <span className="text-xl">✏️</span>
-                <span>Edit Blog</span>
-              </Link>
-            </div>
-          )}
+
+        {/* Edit Button */}
+        {token && userId && blog?.creator?._id === userId && (
+          <div className="mt-6 mb-6 flex justify-start">
+            <Link
+              to={`/edit-blog/${blog.blogId}`}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              <span className="text-xl">✏️</span>
+              <span>Edit Blog</span>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,20 +1,25 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const initialState = {
+  creator: { _id: "" },
+  likes: [],
+  comments: [],
+  _id: "",
+  title: "",
+  content: [],
+  image: "",
+};
+
 const selectedBlogSlice = createSlice({
   name: "selectedBlogSlice",
-  initialState: JSON.parse(localStorage.getItem("selectedBlog")) || {
-    creator: { _id: "" },
-    likes: [],
-    comments: [],
-  },
+  initialState,
   reducers: {
     addSelectedBlog(state, action) {
-      localStorage.setItem("selectedBlog", JSON.stringify(action.payload));
       return action.payload;
     },
-    removeSelectedBlog(state, action) {
-      localStorage.removeItem("selectedBlog");
-      return {};
+
+    removeSelectedBlog() {
+      return initialState;
     },
 
     changeLikes(state, action) {
@@ -31,91 +36,92 @@ const selectedBlogSlice = createSlice({
     },
 
     setCommentLikes(state, action) {
-      let { commentId, userId } = action.payload;
-      function toogleLike(comments) {
+      const { commentId, userId } = action.payload;
+
+      function toggleLike(comments) {
         return comments.map((comment) => {
-          if (comment._id == commentId) {
-            if (comment.likes.includes(userId)) {
-              comment.likes = comment.likes.filter((like) => like !== userId);
-              return comment;
-            } else {
-              comment.likes = [...comment.likes, userId];
-              return comment;
-            }
+          if (comment._id === commentId) {
+            const hasLiked = comment.likes.includes(userId);
+            return {
+              ...comment,
+              likes: hasLiked
+                ? comment.likes.filter((id) => id !== userId)
+                : [...comment.likes, userId],
+            };
           }
 
-          if (comment.replies && comment.replies.length > 0) {
-            return { ...comment, replies: toogleLike(comment.replies) };
+          if (comment.replies?.length > 0) {
+            return { ...comment, replies: toggleLike(comment.replies) };
           }
 
           return comment;
         });
       }
-      state.comments = toogleLike(state.comments);
+
+      state.comments = toggleLike(state.comments);
     },
 
     setReplies(state, action) {
-      let newReply = action.payload;
+      const newReply = action.payload;
 
-      function findParentComment(comments) {
-        let parentComment;
-
-        for (const comment of comments) {
+      function insertReply(comments) {
+        return comments.map((comment) => {
           if (comment._id === newReply.parentComment) {
-            parentComment = {
+            return {
               ...comment,
               replies: [...comment.replies, newReply],
             };
-            break;
           }
 
-          if (comment.replies.length > 0) {
-            parentComment = findParentComment(comment.replies);
-            if (parentComment) {
-              parentComment = {
-                ...comment,
-                replies: comment.replies.map((reply) =>
-                  reply._id == parentComment._id ? parentComment : reply
-                ),
-              };
-              break;
-            }
+          if (comment.replies?.length > 0) {
+            return {
+              ...comment,
+              replies: insertReply(comment.replies),
+            };
           }
-        }
 
-        return parentComment; //top level comment return kr raha hu dost ;
+          return comment;
+        });
       }
 
-      let parentComment = findParentComment(state.comments);
-
-      state.comments = state.comments.map((comment) =>
-        comment._id == parentComment._id ? parentComment : comment
-      );
+      state.comments = insertReply(state.comments);
     },
 
     setUpdatedComments(state, action) {
+      const updatedComment = action.payload;
+
       function updateComment(comments) {
-        return comments.map((comment) =>
-          comment._id == action.payload._id
-            ? { ...comment, comment: action.payload.comment }
-            : comment.replies && comment.replies.length > 0
-            ? { ...comment, replies: updateComment(comment.replies) }
-            : comment
-        );
+        return comments.map((comment) => {
+          if (comment._id === updatedComment._id) {
+            return { ...comment, comment: updatedComment.comment };
+          }
+
+          if (comment.replies?.length > 0) {
+            return {
+              ...comment,
+              replies: updateComment(comment.replies),
+            };
+          }
+
+          return comment;
+        });
       }
 
       state.comments = updateComment(state.comments);
     },
 
     deleteCommentAndReply(state, action) {
+      const commentIdToDelete = action.payload;
+
       function deleteComment(comments) {
         return comments
-          .filter((comment) => comment._id !== action.payload)
-          .map((comment) =>
-            comment.replies && comment.replies.length > 0
-              ? { ...comment, replies: deleteComment(comment.replies) }
-              : comment
-          );
+          .filter((comment) => comment._id !== commentIdToDelete)
+          .map((comment) => ({
+            ...comment,
+            replies: comment.replies?.length
+              ? deleteComment(comment.replies)
+              : [],
+          }));
       }
 
       state.comments = deleteComment(state.comments);
@@ -133,4 +139,5 @@ export const {
   deleteCommentAndReply,
   setUpdatedComments,
 } = selectedBlogSlice.actions;
+
 export default selectedBlogSlice.reducer;

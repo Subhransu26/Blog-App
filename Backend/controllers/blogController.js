@@ -148,6 +148,10 @@ async function createBlog(req, res) {
 // route :- /api/v1/blogs
 async function getBlogs(req, res) {
   try {
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    const skip = (page - 1) * limit;
+
     const blogs = await Blog.find({ draft: false })
       .populate({
         path: "creator",
@@ -156,15 +160,21 @@ async function getBlogs(req, res) {
       .populate({
         path: "likes",
         select: "name email username",
-      });
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     // // Debug log
     // console.log("Fetched blogs with populated creator:", blogs);
+
+    const totalBlogs = await Blog.countDocuments({ draft: false });
 
     return res.status(200).json({
       success: true,
       message: "Blogs fetched successfully.",
       blogs,
+      hasMore: skip + limit < totalBlogs,
     });
   } catch (error) {
     console.error("Error fetching blogs:", error);
@@ -182,18 +192,20 @@ async function getBlogs(req, res) {
 async function getBlog(req, res) {
   try {
     const { id } = req.params;
+
     const blog = await Blog.findOne({ blogId: id })
       .populate({
         path: "comments",
         populate: {
           path: "user",
-          select: "name email username",
+          select: "name email username profilePic",
         },
       })
       .populate({
         path: "creator",
-        select: "name username email",
-      });
+        select: "name username email followers profilePic",
+      })
+      .lean();
 
     if (!blog) {
       return res.status(404).json({
@@ -201,13 +213,37 @@ async function getBlog(req, res) {
         message: "Blog not found",
       });
     }
+
+    async function populateReplies(comments) {
+      for (const comment of comments) {
+        let populatedComment = await Comment.findById(comment._id)
+          .populate({
+            path: "replies",
+            populate: {
+              path: "user",
+              select: "name email username profilePic",
+            },
+          })
+          .lean();
+
+        comment.replies = populatedComment?.replies || [];
+
+        if (comment.replies && comment.replies.length > 0) {
+          await populateReplies(comment.replies);
+        }
+      }
+      return comments;
+    }
+
+    blog.comments = await populateReplies(blog.comments);
+
     return res.status(200).json({
       success: true,
       message: "Blog fetched successfully",
       blog,
     });
   } catch (error) {
-    console.error("Error in getBlog:", error); // Add this
+    console.error("Error in getBlog:", error); 
     res.status(500).json({
       success: false,
       message: error.message,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import DarkModeToggle from "../components/DarkModeToggle";
 import toast from "react-hot-toast";
@@ -19,6 +19,7 @@ function AuthForm({ type }) {
   const [errors, setErrors] = useState({});
 
   const dispatch = useDispatch();
+   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -54,8 +55,7 @@ function AuthForm({ type }) {
       );
       const { user, token, message } = res.data;
       dispatch(login({ user, token }));
-      // localStorage.setItem("user", JSON.stringify(res.data.user));
-      // localStorage.setItem("token", JSON.stringify(res.data.token));
+      navigate("/home");
       toast.success(message);
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong.");
