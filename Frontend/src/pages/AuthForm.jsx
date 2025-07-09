@@ -18,8 +18,10 @@ function AuthForm({ type }) {
 
   const [errors, setErrors] = useState({});
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const dispatch = useDispatch();
-   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -158,7 +160,7 @@ function AuthForm({ type }) {
                 )}
               </div>
 
-              <div>
+              <div className="relative">
                 <label
                   htmlFor="password"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -166,14 +168,24 @@ function AuthForm({ type }) {
                   Password
                 </label>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-12"
                   placeholder="Enter your password"
                 />
+                <span
+                  className="absolute right-4 top-11 transform -translate-y-1/2 cursor-pointer text-xl text-gray-500 dark:text-gray-300"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
+                  <i
+                    className={
+                      showPassword ? "fi fi-br-eye-crossed" : "fi fi-br-eye"
+                    }
+                  ></i>
+                </span>
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}

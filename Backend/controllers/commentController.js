@@ -19,7 +19,7 @@ async function addComment(req, res) {
       });
     }
 
-    const blog = await Blog.findOne({ blogId: id });
+    const blog = await Blog.findById(id);
     // console.log("Blog found:", blog);
 
     if (!blog) {
@@ -51,7 +51,7 @@ async function addComment(req, res) {
     }).then((comment) => {
       return comment.populate({
         path: "user",
-        select: "name email username",
+        select: "name email username profilePic",
       });
     });
 
@@ -180,7 +180,7 @@ async function editComment(req, res) {
   }
 }
 
-// Edit Comment
+// Like Comment
 // request :- post
 // route :- /api/v1/blogs/like-comment/:id
 async function likeComment(req, res) {
@@ -233,7 +233,50 @@ async function likeComment(req, res) {
   }
 }
 
-async function addNestedComment(req, res) {}
+// nested comment
+// request :- POST
+// route :- /api/v1//comment/:parentCommentId/:id
+async function addNestedComment(req, res) {
+  const { parentCommentId, id: blogId } = req.params;
+  const { reply } = req.body;
+  const userId = req.user.id;
+
+  if (!reply || !reply.trim()) {
+    return res.status(400).json({ message: "Reply cannot be empty" });
+  }
+
+  try {
+    // Find the parent comment
+    const parentComment = await Comment.findById(parentCommentId);
+    if (!parentComment) {
+      return res.status(404).json({ message: "Parent comment not found" });
+    }
+
+    // Create new nested comment
+    const newReply = await Comment.create({
+      comment: reply,
+      user: userId,
+      blog: blogId,
+      parentComment: parentCommentId,
+    });
+
+    // Add this reply to parent comment's replies array
+    parentComment.replies.push(newReply._id);
+    await parentComment.save();
+
+    const populatedReply = await Comment.findById(newReply._id)
+      .populate("user", "name avatar")
+      .lean();
+
+    res.status(201).json({
+      message: "Reply added successfully",
+      newReply: populatedReply,
+    });
+  } catch (err) {
+    console.error("Error in addNestedComment:", err.message);
+    res.status(500).json({ message: "Server error while adding reply" });
+  }
+}
 
 module.exports = {
   addComment,

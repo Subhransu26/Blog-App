@@ -29,7 +29,7 @@ const selectedBlogSlice = createSlice({
       } else {
         state.likes.push(userId);
       }
-    },
+    }, 
 
     setComments(state, action) {
       state.comments = [...state.comments, action.payload];

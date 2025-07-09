@@ -20,9 +20,14 @@ export default function DarkModeToggle() {
   return (
     <button
       onClick={() => setDarkMode((prev) => !prev)}
-      className="fixed top-4 right-4 z-50 bg-gray-200 dark:bg-gray-800 p-2 rounded-full shadow"
+      className="transition-all duration-300 ease-in-out flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full shadow-md"
+      aria-label="Toggle dark mode"
     >
-      {darkMode ? <Sun className="text-yellow-400" /> : <Moon className="text-gray-700" />}
+      {darkMode ? (
+        <Sun className="text-yellow-400 w-5 h-5 " />
+      ) : (
+        <Moon className="text-gray-800 dark:text-gray-100 w-5 h-5 " />
+      )}
     </button>
   );
 }

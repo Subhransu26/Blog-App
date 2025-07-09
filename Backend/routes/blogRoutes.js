@@ -56,7 +56,7 @@ route.post("/blogs/like/:id", verifyUser, likeBlog);
 route.post("/blogs/comment/:id", verifyUser, addComment);
 route.delete("/blogs/comment/:id", verifyUser, deleteComment);
 route.put("/blogs/edit-comment/:id", verifyUser, editComment);
-route.post("/blogs/like-comment/:id", verifyUser, likeComment);
+route.patch("/blogs/like-comment/:id", verifyUser, likeComment);
 
 // for nested comment
 route.post("/comment/:parentCommentId/:id", verifyUser, addNestedComment);

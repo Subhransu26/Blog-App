@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import BlogCard from "../components/BlogCard";
+import Spinner from "../components/Common/Spinner";
 
 const Blogs = () => {
   const [blogs, setBlogs] = useState([]);
@@ -48,9 +49,7 @@ const Blogs = () => {
         </div>
       )}
 
-      {loading && (
-        <div className="text-center mt-6 text-sm text-gray-500">Loading...</div>
-      )}
+      {loading && <Spinner message="Loading blog..." />}
     </div>
   );
 };
