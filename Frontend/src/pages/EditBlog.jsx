@@ -1,17 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Spinner from "../components/Common/Spinner";
 import { useSelector } from "react-redux";
+import EditorJS from "@editorjs/editorjs";
+import Header from "@editorjs/header";
+import NestedList from "@editorjs/nested-list";
+import Marker from "@editorjs/marker";
+import Underline from "@editorjs/underline";
+import Embed from "@editorjs/embed";
+import ImageTool from "@editorjs/image";
+import TextVariantTune from "@editorjs/text-variant-tune";
 
 const EditBlog = () => {
-  const token = useSelector((state) => state.user?.token);
-
   const { id } = useParams();
-
   const navigate = useNavigate();
+  const token = useSelector((state) => state.user?.token);
+  const selectedBlog = useSelector((state) => state.selectedBlog.selectedBlog);
+  const editorjsRef = useRef(null);
 
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [blogData, setBlogData] = useState({
     title: "",
     description: "",
@@ -19,16 +29,10 @@ const EditBlog = () => {
     content: "",
     draft: false,
     image: null,
-    images: [],
   });
 
   const [existingThumb, setExistingThumb] = useState("");
-  const [existingInlineImages, setExistingInlineImages] = useState([]);
   const [newThumb, setNewThumb] = useState(null);
-  const [newInline, setNewInline] = useState([]);
-
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
 
   const fetchBlog = async () => {
     try {
@@ -36,31 +40,22 @@ const EditBlog = () => {
         `${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`
       );
       const blog = res.data.blog;
+
       setBlogData({
         title: blog.title,
         description: blog.description,
         tags: blog.tags.join(", "),
-        content: JSON.stringify(blog.content, null, 2),
+        content: JSON.stringify(blog.content),
         draft: blog.draft,
         image: null,
-        images: [],
       });
       setExistingThumb(blog.image || "");
-
-      const inlineImages = blog.content.blocks
-        .filter((block) => block.type === "image" && block.data?.file?.url)
-        .map((block) => block.data.file.url);
-      setExistingInlineImages(inlineImages);
-
-      // eslint-disable-next-line no-unused-vars
     } catch (error) {
       toast.error("Failed to load blog");
     } finally {
       setLoading(false);
     }
   };
-
-  const selectedBlog = useSelector((state) => state.selectedBlog.selectedBlog);
 
   useEffect(() => {
     if (!selectedBlog || selectedBlog._id !== id) {
@@ -71,35 +66,69 @@ const EditBlog = () => {
         title: blog.title,
         description: blog.description,
         tags: blog.tags.join(", "),
-        content: JSON.stringify(blog.content, null, 2),
+        content: JSON.stringify(blog.content),
         draft: blog.draft,
         image: null,
-        images: [],
       });
       setExistingThumb(blog.image || "");
-
-      const inlineImages = blog.content.blocks
-        .filter((block) => block.type === "image" && block.data?.file?.url)
-        .map((block) => block.data.file.url);
-      setExistingInlineImages(inlineImages);
       setLoading(false);
     }
   }, [id, selectedBlog]);
+
+  useEffect(() => {
+    if (!loading && blogData.content && !editorjsRef.current) {
+      const parsedContent = JSON.parse(blogData.content);
+      const editorHolder = document.getElementById("editorjs");
+      if (editorHolder) initializeEditor(parsedContent);
+    }
+    return () => {
+      if (editorjsRef.current?.destroy) {
+        editorjsRef.current.destroy();
+        editorjsRef.current = null;
+      }
+    };
+  }, [loading, blogData.content]);
+
+  const initializeEditor = (content) => {
+    editorjsRef.current = new EditorJS({
+      holder: "editorjs",
+      placeholder: "Edit your blog content here...",
+      data: content,
+      tools: {
+        header: { class: Header, inlineToolbar: true },
+        list: { class: NestedList, inlineToolbar: true },
+        marker: Marker,
+        underline: Underline,
+        embed: Embed,
+        textVariant: TextVariantTune,
+        image: {
+          class: ImageTool,
+          config: {
+            uploader: {
+              uploadByFile: async (image) => ({
+                success: 1,
+                file: { url: URL.createObjectURL(image), image },
+              }),
+            },
+          },
+        },
+      },
+      tunes: ["textVariant"],
+      onChange: async () => {
+        const content = await editorjsRef.current.save();
+        setBlogData((prev) => ({ ...prev, content: JSON.stringify(content) }));
+      },
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === "checkbox") {
       setBlogData({ ...blogData, [name]: checked });
-    } else if (type === "file") {
-      if (name === "image") {
-        const file = files[0];
-        setBlogData({ ...blogData, image: file });
-        setNewThumb(URL.createObjectURL(file));
-      } else if (name === "images") {
-        const filesArray = Array.from(files);
-        setBlogData({ ...blogData, images: filesArray });
-        setNewInline(filesArray.map((f) => URL.createObjectURL(f)));
-      }
+    } else if (type === "file" && name === "image") {
+      const file = files[0];
+      setBlogData({ ...blogData, image: file });
+      setNewThumb(URL.createObjectURL(file));
     } else {
       setBlogData({ ...blogData, [name]: value });
     }
@@ -110,18 +139,15 @@ const EditBlog = () => {
     setSubmitting(true);
 
     const formData = new FormData();
-
     formData.append("title", blogData.title);
     formData.append("description", blogData.description);
     formData.append(
       "tags",
-      JSON.stringify(blogData.tags.split(",").map((tag) => tag.trim()))
+      JSON.stringify(blogData.tags.split(",").map((t) => t.trim()))
     );
     formData.append("content", blogData.content);
     formData.append("draft", blogData.draft);
-
     if (blogData.image) formData.append("image", blogData.image);
-    blogData.images.forEach((img) => formData.append("images", img));
 
     try {
       const res = await axios.put(
@@ -146,166 +172,99 @@ const EditBlog = () => {
   if (loading) return <Spinner message="Fetching blog details..." />;
 
   return (
-    <div className="min-h-screen px-4 py-10 bg-white dark:bg-gray-900 transition duration-300 text-gray-800 dark:text-white">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold mb-4">Edit Blog</h1>
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 hover:from-gray-300 hover:to-gray-400 dark:hover:from-gray-600 dark:hover:to-gray-700 text-gray-800 dark:text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300 group"
-        >
-          <svg
-            className="w-5 h-5 transform transition-transform duration-300 group-hover:-translate-x-1"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          <span>Back</span>
-        </button>
+    <div className="min-h-screen bg-white dark:bg-gray-900 px-6 py-12 text-gray-800 dark:text-white">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8 text-center">Edit Blog</h1>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title */}
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-8 bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md p-8"
+        >
           <div>
-            <label className="block font-semibold">Title</label>
+            <label className="block text-lg font-semibold mb-2">Title</label>
             <input
               name="title"
               value={blogData.title}
               onChange={handleChange}
-              className="w-full p-3 rounded bg-gray-800 text-white dark:bg-gray-700"
+              className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter blog title"
             />
           </div>
 
-          {/* Description*/}
           <div>
-            <label className="block font-semibold">Description</label>
+            <label className="block text-lg font-semibold mb-2">
+              Description
+            </label>
             <textarea
               name="description"
               value={blogData.description}
               onChange={handleChange}
-              rows={3}
-              className="resize-none w-full p-3 rounded bg-gray-800 text-white dark:bg-gray-700"
+              className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="3"
+              placeholder="Brief description of your blog"
             />
           </div>
 
-          {/* Tags */}
           <div>
-            <label className="block font-semibold">
-              Tags (comma separated)
-            </label>
+            <label className="block text-lg font-semibold mb-2">Tags</label>
             <input
               name="tags"
               value={blogData.tags}
               onChange={handleChange}
-              className="w-full p-3 rounded bg-gray-800 text-white dark:bg-gray-700"
+              className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Comma-separated tags (e.g., react, dev, ai)"
             />
           </div>
 
-          {/* Content */}
           <div>
-            <label className="block font-semibold">
-              Content (EditorJS JSON)
+            <label className="block text-lg font-semibold mb-2">Content</label>
+            <div
+              id="editorjs"
+              className="min-h-[300px] p-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-lg font-semibold mb-2">
+              Thumbnail
             </label>
-            <textarea
-              name="content"
-              value={blogData.content}
-              onChange={handleChange}
-              rows={8}
-              className="resize-none overflow-y-scroll no-scrollbar w-full p-3 rounded bg-gray-800 text-white dark:bg-gray-700 font-mono text-sm"
-            />
-          </div>
-
-          {/* Thumbnail */}
-          <div>
-            <label className="block font-semibold">Thumbnail</label>
-            {newThumb ? (
-              <img
-                src={newThumb}
-                alt="New Thumbnail"
-                className="w-48 h-auto my-2 rounded-md"
-              />
-            ) : existingThumb ? (
-              <img
-                src={existingThumb}
-                alt="Current Thumbnail"
-                className="w-48 h-auto my-2 rounded-md"
-              />
-            ) : (
-              <p className="text-sm text-gray-500">No thumbnail</p>
-            )}
+            <div className="mb-4">
+              {newThumb ? (
+                <img src={newThumb} className="w-48 rounded-lg shadow-md" />
+              ) : existingThumb ? (
+                <img src={existingThumb} className="w-48 rounded-lg shadow-md" />
+              ) : null}
+            </div>
             <input
               type="file"
               name="image"
               accept="image/*"
               onChange={handleChange}
-              className="text-white mt-2"
+              className="file:bg-blue-600 file:text-white file:rounded-lg file:px-4 file:py-2 file:border-0 file:cursor-pointer bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg w-full"
             />
           </div>
 
-          <div>
-            <label className="block font-semibold">Inline Images</label>
-            <div className="flex gap-2 flex-wrap my-2">
-              {newInline.length > 0
-                ? newInline.map((url, idx) => (
-                    <img
-                      key={idx}
-                      src={url}
-                      alt={`New Inline ${idx}`}
-                      className="w-28 h-28 object-cover rounded"
-                    />
-                  ))
-                : existingInlineImages.map((url, idx) => (
-                    <img
-                      key={idx}
-                      src={url}
-                      alt={`Inline ${idx}`}
-                      className="w-28 h-28 object-cover rounded"
-                    />
-                  ))}
-            </div>
-            <input
-              type="file"
-              name="images"
-              multiple
-              accept="image/*"
-              onChange={handleChange}
-              className="text-white"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <input
               type="checkbox"
               name="draft"
               checked={blogData.draft}
               onChange={handleChange}
+              className="accent-blue-600 scale-125"
             />
-            <label>Save as Draft</label>
+            <label className="text-lg font-medium">Save as Draft</label>
           </div>
 
-          {/* Update Button */}
           <button
             type="submit"
             disabled={submitting}
-            className={`flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-200 ${
-              submitting ? "opacity-80 cursor-not-allowed" : ""
-            }`}
+            className={`w-full py-3 text-lg font-semibold rounded-lg transition-all duration-200 ${
+              submitting
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            } text-white shadow-lg`}
           >
-            {submitting ? (
-              <div className="flex items-center gap-2">
-                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Updating...
-              </div>
-            ) : (
-              "Update Blog"
-            )}
+            {submitting ? "Updating..." : "Update Blog"}
           </button>
         </form>
       </div>

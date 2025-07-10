@@ -265,7 +265,7 @@ async function addNestedComment(req, res) {
     await parentComment.save();
 
     const populatedReply = await Comment.findById(newReply._id)
-      .populate("user", "name avatar")
+      .populate("user", "name profilePic")
       .lean();
 
     res.status(201).json({

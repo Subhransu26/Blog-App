@@ -4,7 +4,12 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Spinner from "../components/Common/Spinner";
-import { addSelectedBlog, changeLikes, removeSelectedBlog } from "../utils/selectedBlogSlice";
+import ShareDropdown from "../components/ShareDropdown";
+import {
+  addSelectedBlog,
+  changeLikes,
+  removeSelectedBlog,
+} from "../utils/selectedBlogSlice";
 import { setIsOpen } from "../utils/commentSlice";
 import Comment from "../components/Comments";
 
@@ -27,6 +32,7 @@ const BlogDetail = () => {
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLike, setIsLike] = useState(false);
+  const [showShare, setShowShare] = useState(false);
 
   const isCommentOpen = useSelector((state) => state.comment.isOpen);
 
@@ -137,6 +143,19 @@ const BlogDetail = () => {
     );
   }
 
+  const handleShare = () => {
+    const blogUrl = window.location.href; // or `/blogs/${blogId}` if not on blog page
+
+    navigator.clipboard
+      .writeText(blogUrl)
+      .then(() => {
+        toast.success("Blog link copied to clipboard!");
+      })
+      .catch(() => {
+        toast.error("Failed to copy link.");
+      });
+  };
+
   return (
     <div className="min-h-screen px-4 py-10 bg-gray-100 dark:bg-gray-900 transition duration-300 text-gray-800 dark:text-white">
       <div className={`${isCommentOpen ? "blur-sm" : ""} transition-all`}>
@@ -207,7 +226,8 @@ const BlogDetail = () => {
             <div className="flex items-center gap-6">
               <i className="fi fi-rr-bookmark-add text-lg cursor-pointer hover:text-black dark:hover:text-white transition"></i>
               <i className="fi fi-rr-play text-lg cursor-pointer hover:text-black dark:hover:text-white transition"></i>
-              <i className="fi fi-rr-share text-lg cursor-pointer hover:text-black dark:hover:text-white transition"></i>
+
+              <ShareDropdown />
               <i className="fi fi-rr-menu-dots-vertical text-lg cursor-pointer hover:text-black dark:hover:text-white transition"></i>
             </div>
           </div>

@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 function Comment() {
   const dispatch = useDispatch();
+
   const [comment, setComment] = useState("");
   const [activeReply, setActiveReply] = useState(null);
   const [currentPopup, setCurrentPopup] = useState(null);
@@ -30,8 +31,6 @@ function Comment() {
   const { token, id: userId } = useSelector((state) => state.user);
 
   async function handleComment() {
-    console.log("Sending comment for blog ID:", blogId);
-
     if (!comment.trim()) return toast.error("Comment can't be empty");
 
     try {
@@ -201,10 +200,10 @@ function DisplayComments({
             <img
               src={
                 comment.user?.profilePic ||
-                "https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg"
+                `https://api.dicebear.com/9.x/initials/svg?seed=${comment.user.name}`
               }
               alt={comment.user?.name}
-              className="w-10 h-10 rounded-full object-cover"
+              className="w-8 h-8 rounded-full object-cover"
             />
             <div className="flex-1">
               <div className="flex items-center gap-2">
@@ -223,19 +222,19 @@ function DisplayComments({
               </p>
 
               <div className="flex gap-4 text-sm mt-2 text-gray-600 dark:text-gray-400">
-                  <button
-                    onClick={() => handleCommentLike(comment._id)}
-                    className="flex items-center gap-1"
-                  >
-                    <i
-                      className={
-                        comment.likes?.includes(userId)
-                          ? "fi fi-sr-heart text-red-500"
-                          : "fi fi-rr-heart"
-                      }
-                    ></i>
-                    <span>{comment.likes?.length}</span>
-                  </button>
+                <button
+                  onClick={() => handleCommentLike(comment._id)}
+                  className="flex items-center gap-1"
+                >
+                  <i
+                    className={
+                      comment.likes?.includes(userId)
+                        ? "fi fi-sr-heart text-red-500"
+                        : "fi fi-rr-heart"
+                    }
+                  ></i>
+                  <span>{comment.likes?.length}</span>
+                </button>
 
                 <button onClick={() => handleActiveReply(comment._id)}>
                   Reply

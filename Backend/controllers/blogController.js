@@ -57,6 +57,7 @@ async function createBlog(req, res) {
 
     // ---------------- Cloudinary Process ----------------------
     let imageIndex = 0;
+    const uploadedInlineImages = [];
 
     // for content images
     for (let i = 0; i < content.blocks.length; i++) {
@@ -75,6 +76,7 @@ async function createBlog(req, res) {
             imageId: public_id,
           };
 
+          uploadedInlineImages.push(secure_url);
           imageIndex++;
         } else {
           block.data.file = {
@@ -122,6 +124,7 @@ async function createBlog(req, res) {
       content,
       image: secure_url,
       imageId: public_id,
+      images: uploadedInlineImages,
     });
 
     await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
@@ -243,7 +246,7 @@ async function getBlog(req, res) {
       blog,
     });
   } catch (error) {
-    console.error("Error in getBlog:", error); 
+    console.error("Error in getBlog:", error);
     res.status(500).json({
       success: false,
       message: error.message,
