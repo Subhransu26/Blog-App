@@ -95,10 +95,6 @@ function AuthForm({ type }) {
     }
   };
 
-  
-
-
-
   return (
     <div className="relative h-screen w-full overflow-hidden font-sans bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300">
       <div className="absolute inset-0 bg-gradient-to-br from-[#7F00FF] via-[#E100FF] to-[#FF7F50] blur-3xl opacity-20 z-0 animate-gradient" />
@@ -211,7 +207,7 @@ function AuthForm({ type }) {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Enter your password"
-                    className="w-full px-4 py-3 pr-16 rounded-md bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                    className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   <div className="absolute inset-y-0 right-3 flex items-center space-x-2">
                     <span
