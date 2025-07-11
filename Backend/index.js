@@ -8,7 +8,7 @@ const cors = require("cors");
 
 const app = express();
 
-app.use(cors({origin: FRONTEND_URL}));
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());
 
 const port = PORT || 5000;
@@ -17,8 +17,8 @@ app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-app.use('/api/v1', userRoutes);
-app.use('/api/v1', blogRoutes);
+app.use("/api/v1", userRoutes);
+app.use("/api/v1", blogRoutes);
 
 app.listen(port, () => {
   console.log(`Server Started at port ${port}`);

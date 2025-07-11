@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import DarkModeToggle from "../components/DarkModeToggle";
@@ -95,9 +95,12 @@ function AuthForm({ type }) {
     }
   };
 
+  
+
+
+
   return (
     <div className="relative h-screen w-full overflow-hidden font-sans bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300">
-      <DarkModeToggle />
       <div className="absolute inset-0 bg-gradient-to-br from-[#7F00FF] via-[#E100FF] to-[#FF7F50] blur-3xl opacity-20 z-0 animate-gradient" />
 
       <div className="relative z-10 flex h-full">
@@ -213,7 +216,9 @@ function AuthForm({ type }) {
                   <div className="absolute inset-y-0 right-3 flex items-center space-x-2">
                     <span
                       role="button"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                       onClick={() => setShowPassword((prev) => !prev)}
                       className="text-xl text-white cursor-pointer"
                     >

@@ -1,8 +1,11 @@
+const { randomUUID } = require("crypto");
 const User = require("../models/userSchema");
 const bcrypt = require("bcryptjs");
 const { generateJWT, verifyJWT } = require("../utils/generateToken");
 const transporter = require("../utils/transporter");
-const { FRONTEND_URL, EMAIL_USER } = require("../config/dotenv.config");
+const admin = require("firebase-admin");
+const { EMAIL_USER, FRONTEND_URL } = require("../config/dotenv.config");
+
 
 // Create User
 // request :- post
@@ -39,6 +42,13 @@ async function createUser(req, res) {
     // Check if email exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      if (existingUser.googleAuth) {
+        return res.status(400).json({
+          success: true,
+          message:
+            "This email already registered with google. please try through continue with google",
+        });
+      }
       if (existingUser.isVerify) {
         return res.status(400).json({
           success: false,
@@ -195,9 +205,6 @@ async function verifyEmail(req, res) {
     });
   }
 }
-
-// Google Authentication
-async function googleAuth(req, res) {}
 
 // Login
 // request :- post
@@ -428,7 +435,6 @@ module.exports = {
   deleteUser,
   login,
   verifyEmail,
-  googleAuth,
   followUser,
   changeSavedLikedBlog,
 };

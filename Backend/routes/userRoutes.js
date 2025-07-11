@@ -18,6 +18,7 @@ const route = express.Router();
 
 route.post("/signup", createUser);
 route.get("/verify-email/:verificationToken", verifyEmail);
+
 route.post("/login", login);
 
 route.get("/users", getAllUsers);

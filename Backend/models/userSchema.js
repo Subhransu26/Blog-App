@@ -18,7 +18,9 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.googleAuth;
+      },
       select: false,
     },
     blogs: [
@@ -50,34 +52,30 @@ const userSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+        default: [],
       },
     ],
     following: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+        default: [],
       },
     ],
-    saveBlogs: [
+    showLikedBlogs: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Blog",
+        default: [],
       },
     ],
-    likeBlogs: [
+    showSavedBlogs: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Blog",
+        default: [],
       },
     ],
-    showLikedBlogs: {
-      type: Boolean,
-      default: true,
-    },
-    showSavedBlogs: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true }
 );
