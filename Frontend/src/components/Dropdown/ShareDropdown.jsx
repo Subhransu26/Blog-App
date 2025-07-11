@@ -1,4 +1,3 @@
-// components/ShareDropdown.jsx
 import { Menu } from "@headlessui/react";
 import {
   FaFacebook,
@@ -27,11 +26,11 @@ const ShareDropdown = () => {
 
   return (
     <Menu as="div" className="relative inline-block text-left">
-      <Menu.Button>
-        <i className="fi fi-rr-share text-lg cursor-pointer hover:text-black dark:hover:text-white transition"></i>
+      <Menu.Button className="text-lg cursor-pointer hover:text-black dark:hover:text-white transition focus:outline-none focus:ring-0">
+        <i className="fi fi-rr-share "></i>
       </Menu.Button>
 
-      <Menu.Items className="absolute bottom-full mb-2 right-0 w-56 origin-bottom-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+      <Menu.Items className="absolute bottom-full mb-2 right-0 max-w-[90vw] w-56 origin-bottom-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
         <div className="py-1">
           <Menu.Item>
             {() => (

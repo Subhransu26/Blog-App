@@ -47,13 +47,13 @@ function Navbar() {
               <span className="text-pink-600">App</span>
             </Link>
 
-            {/* Search bar */}
-            <div className="hidden md:flex w-[300px] bg-slate-800 dark:bg-slate-700 px-4 py-2 rounded-full items-center space-x-2">
-              <i className="fi fi-rr-search text-pink-400 text-sm" />
+            {/* Search Bar */}
+            <div className="hidden md:flex w-[300px] bg-white dark:bg-slate-800 px-4 py-2 rounded-full items-center shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-slate-700">
+              <i className="fi fi-rr-search text-pink-500 text-base" />
               <input
                 type="text"
-                placeholder="Search"
-                className="bg-transparent text-sm placeholder:text-gray-400 text-white focus:outline-none w-full"
+                placeholder="Search..."
+                className="bg-transparent ml-2 text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 text-black dark:text-white focus:outline-none w-full"
               />
             </div>
           </div>

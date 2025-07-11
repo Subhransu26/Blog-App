@@ -15,7 +15,7 @@ function App() {
   const token = useSelector((state) => state.user.token);
 
   return (
-    <div className="pt-10 overflow-auto scrollbar-none">
+    <div className="overflow-x-hidden pt-10 overflow-auto scrollbar-none">
       <Navbar />
       <Routes>
         {/* Redirect root based on auth */}

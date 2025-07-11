@@ -11,11 +11,11 @@ import Underline from "@editorjs/underline";
 import Embed from "@editorjs/embed";
 import ImageTool from "@editorjs/image";
 import TextVariantTune from "@editorjs/text-variant-tune";
+import { removeSelectedBlog } from "../utils/selectedBlogSlice";
 
 const AddBlog = () => {
   const editorjsRef = useRef(null);
   const token = useSelector((slice) => slice.user?.token);
-  const { content } = useSelector((slice) => slice.selectedBlog);
 
   const [loading, setLoading] = useState(false);
   const [blogData, setBlogData] = useState({
@@ -120,10 +120,12 @@ const AddBlog = () => {
   };
 
   const initializeEditorjs = () => {
-    editorjsRef.current = new EditorJS({
+    if (editorjsRef.current) return;
+
+    const editor = new EditorJS({
       holder: "editorjs",
       placeholder: "Write your amazing blog...",
-      data: content,
+      data: { blocks: [] },
       tools: {
         header: {
           class: Header,
@@ -134,7 +136,7 @@ const AddBlog = () => {
             defaultLevel: 3,
           },
         },
-        List: { class: NestedList, config: {}, inlineToolbar: true },
+        List: { class: NestedList, inlineToolbar: true },
         Marker: Marker,
         Underline: Underline,
         Embed: Embed,
@@ -152,16 +154,31 @@ const AddBlog = () => {
         },
       },
       tunes: ["textVariant"],
+      onReady: () => {
+        editorjsRef.current = editor;
+      },
       onChange: async () => {
-        const data = await editorjsRef.current.save();
+        const data = await editor.save();
         setBlogData((prev) => ({ ...prev, content: JSON.stringify(data) }));
       },
     });
   };
 
+  // Remove any selected blog data from Redux
   useEffect(() => {
-    if (!editorjsRef.current) initializeEditorjs();
+    dispatch(removeSelectedBlog());
+  }, [dispatch]);
+
+  // Defer editor initialization until DOM is ready
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (document.getElementById("editorjs") && !editorjsRef.current) {
+        initializeEditorjs();
+      }
+    }, 0);
+
     return () => {
+      clearTimeout(timeout);
       if (editorjsRef.current?.destroy) {
         editorjsRef.current.destroy();
         editorjsRef.current = null;
@@ -250,9 +267,7 @@ const AddBlog = () => {
                 className="mx-auto h-48 object-contain rounded-lg"
               />
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">
-                Click to upload
-              </p>
+              <p className="text-gray-500 dark:text-gray-400">Click to upload</p>
             )}
           </label>
           <input
@@ -274,10 +289,7 @@ const AddBlog = () => {
             onChange={handleCheckbox}
             className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600"
           />
-          <label
-            htmlFor="draft"
-            className="text-sm text-gray-700 dark:text-gray-300"
-          >
+          <label htmlFor="draft" className="text-sm text-gray-700 dark:text-gray-300">
             Save as Draft
           </label>
         </div>

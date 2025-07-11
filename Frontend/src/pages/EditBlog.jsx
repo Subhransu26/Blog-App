@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
-import Spinner from "../components/Common/Spinner";
+import {Spinner} from "../components/Common/Spinner";
 import { useSelector } from "react-redux";
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";

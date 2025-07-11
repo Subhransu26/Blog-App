@@ -1,4 +1,4 @@
-const Spinner = ({ message = "Loading..." }) => {
+export const Spinner = ({ message = "Loading..." }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[40vh]">
       {/* Spinner */}
@@ -15,4 +15,12 @@ const Spinner = ({ message = "Loading..." }) => {
   );
 };
 
-export default Spinner;
+
+export const SmallSpinner = () => (
+  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+);
+
+
+
+
+
