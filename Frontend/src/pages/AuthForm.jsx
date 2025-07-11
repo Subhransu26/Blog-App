@@ -17,8 +17,8 @@ function AuthForm({ type }) {
   });
 
   const [errors, setErrors] = useState({});
-
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -28,10 +28,22 @@ function AuthForm({ type }) {
     setErrors({ ...errors, [e.target.name]: "" });
   };
 
+  const validateEmail = (email) => {
+    if (!email.trim()) return "Email is required";
+    if (!/\S+@\S+\.\S+/.test(email)) return "Invalid email format";
+    return "";
+  };
+
+  const validatePassword = (password) => {
+    if (!password.trim()) return "Password is required";
+    if (password.length < 8) return "Password must be at least 8 characters";
+    return "";
+  };
+
   const validateFields = () => {
     const newErrors = {};
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    if (!formData.password.trim()) newErrors.password = "Password is required";
+    newErrors.email = validateEmail(formData.email);
+    newErrors.password = validatePassword(formData.password);
 
     if (!isLogin) {
       if (!formData.name.trim()) newErrors.name = "Name is required";
@@ -39,28 +51,47 @@ function AuthForm({ type }) {
         newErrors.username = "Username is required";
     }
 
+    // Remove empty error fields
+    Object.keys(newErrors).forEach(
+      (key) => !newErrors[key] && delete newErrors[key]
+    );
+
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const validationErrors = validateFields();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
+    const baseUrl = import.meta.env.VITE_BACKEND_URL;
+    if (!baseUrl) {
+      toast.error("Backend URL is not configured.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/${type}`,
-        formData
-      );
+      const endpoint = type.toLowerCase();
+      const res = await axios.post(`${baseUrl}/${endpoint}`, formData);
       const { user, token, message } = res.data;
-      dispatch(login({ user, token }));
-      navigate("/home");
-      toast.success(message);
+
+      if (!isLogin) {
+        toast.success(message);
+        navigate("/login");
+      } else {
+        dispatch(login({ user, token }));
+        toast.success(message);
+        navigate("/home");
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,13 +132,14 @@ function AuthForm({ type }) {
                       Full Name
                     </label>
                     <input
+                      autoFocus
                       type="text"
                       id="name"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="Enter your full name"
+                      className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                     {errors.name && (
                       <p className="text-red-500 text-sm mt-1">{errors.name}</p>
@@ -127,8 +159,8 @@ function AuthForm({ type }) {
                       name="username"
                       value={formData.username}
                       onChange={handleChange}
-                      className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="Choose a username"
+                      className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                     {errors.username && (
                       <p className="text-red-500 text-sm mt-1">
@@ -147,45 +179,52 @@ function AuthForm({ type }) {
                   Email
                 </label>
                 <input
+                  autoFocus={isLogin}
                   type="email"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="Enter your email"
+                  className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
                 {errors.email && (
                   <p className="text-red-500 text-sm mt-1">{errors.email}</p>
                 )}
               </div>
 
-              <div className="relative">
+              <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  className="block text-sm font-medium text-gray-300 mb-1"
                 >
                   Password
                 </label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-12"
-                  placeholder="Enter your password"
-                />
-                <span
-                  className="absolute right-4 top-11 transform -translate-y-1/2 cursor-pointer text-xl text-gray-500 dark:text-gray-300"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                >
-                  <i
-                    className={
-                      showPassword ? "fi fi-br-eye-crossed" : "fi fi-br-eye"
-                    }
-                  ></i>
-                </span>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Enter your password"
+                    className="w-full px-4 py-3 pr-16 rounded-md bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                  />
+                  <div className="absolute inset-y-0 right-3 flex items-center space-x-2">
+                    <span
+                      role="button"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="text-xl text-white cursor-pointer"
+                    >
+                      {showPassword ? (
+                        <i className="fi fi-br-eye"></i>
+                      ) : (
+                        <i className="fi fi-br-eye-crossed"></i>
+                      )}
+                    </span>
+                  </div>
+                </div>
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
@@ -193,9 +232,16 @@ function AuthForm({ type }) {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-semibold rounded-md shadow-md transition duration-300"
+                disabled={loading}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-semibold rounded-md shadow-md transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLogin ? "Login" : "Sign Up"}
+                {loading
+                  ? isLogin
+                    ? "Logging in..."
+                    : "Signing up..."
+                  : isLogin
+                  ? "Login"
+                  : "Sign Up"}
               </button>
             </form>
 
