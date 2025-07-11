@@ -2,7 +2,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import AuthForm from "./pages/AuthForm";
-import Navbar from "./components/NavBar";
+import Navbar from "./components/Navbar";
 import About from "./pages/About";
 import Blogs from "./pages/Blogs";
 import AddBlog from "./pages/AddBlog";
