@@ -19,9 +19,7 @@ async function createBlog(req, res) {
 
     const content = JSON.parse(req.body.content || "{}");
     const tags = JSON.parse(req.body.tags || "[]");
-
     const image = req.files?.image?.[0]; // blog thumbnail
-    const images = req.files?.images || []; // inline content images
 
     const draft =
       req.body.draft === "false" || req.body.draft === false ? false : true;
@@ -55,46 +53,20 @@ async function createBlog(req, res) {
       });
     }
 
-    // ---------------- Cloudinary Process ----------------------
-    let imageIndex = 0;
+    // ✅ Collect already-uploaded inline image URLs from EditorJS blocks
     const uploadedInlineImages = [];
-
-    // for content images
-    for (let i = 0; i < content.blocks.length; i++) {
-      const block = content.blocks[i];
-
-      if (block.type === "image") {
-        if (images[imageIndex]) {
-          const { secure_url, public_id } = await uploadImage(
-            `data:image/jpeg;base64,${images[imageIndex].buffer.toString(
-              "base64"
-            )}`
-          );
-
-          block.data.file = {
-            url: secure_url,
-            imageId: public_id,
-          };
-
-          uploadedInlineImages.push(secure_url);
-          imageIndex++;
-        } else {
-          block.data.file = {
-            url: "",
-            imageId: "",
-          };
-        }
+    for (const block of content.blocks) {
+      if (block.type === "image" && block.data?.file?.url) {
+        uploadedInlineImages.push(block.data.file.url);
       }
     }
 
-    // Upload blog thumbnail image
+    // ✅ Upload blog thumbnail image to Cloudinary
     const { secure_url, public_id } = await uploadImage(
       `data:image/jpeg;base64,${image.buffer.toString("base64")}`
     );
 
-    // ------------------------------------------------------------------------
-
-    // Validate creator
+    // ✅ Validate user
     const finduser = await User.findById(creator);
     if (!finduser) {
       return res.status(404).json({
@@ -113,7 +85,7 @@ async function createBlog(req, res) {
 
     const blogId = title.toLowerCase().split(" ").join("-") + "-" + uuidv4();
 
-    // Create the blog
+    // ✅ Create the blog
     const blog = await Blog.create({
       title,
       description,
@@ -145,7 +117,6 @@ async function createBlog(req, res) {
     });
   }
 }
-
 //  get Blogs
 // request :- get
 // route :- /api/v1/blogs
