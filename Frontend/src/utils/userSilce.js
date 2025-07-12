@@ -10,8 +10,8 @@ const defaultState = {
   profilePic: null,
   followers: [],
   following: [],
+  bio: "",
 };
-
 
 let storedUser = {};
 try {
@@ -26,6 +26,8 @@ try {
 const initialState = {
   ...defaultState,
   ...storedUser,
+  followers: storedUser.followers || [],
+  following: storedUser.following || [],
 };
 
 const userSlice = createSlice({
@@ -36,14 +38,14 @@ const userSlice = createSlice({
       const { user, token } = action.payload;
 
       const userData = {
-        ...user,       // flatten user fields
+        ...user, // flatten user fields
         token,
         followers: user.followers || [],
         following: user.following || [],
       };
 
       localStorage.setItem("user", JSON.stringify(userData));
-      return userData;
+      Object.assign(state, userData);
     },
 
     // for logout
@@ -57,9 +59,8 @@ const userSlice = createSlice({
       const data = action.payload;
 
       if (data[0] === "visibility") {
-        const updated = { ...state, ...data[1] };
-        localStorage.setItem("user", JSON.stringify(updated));
-        return updated;
+        Object.assign(state, data[1]);
+        localStorage.setItem("user", JSON.stringify(state));
       }
 
       if (data[0] === "followers") {
@@ -67,9 +68,8 @@ const userSlice = createSlice({
           ? state.following.filter((id) => id !== data[1])
           : [...state.following, data[1]];
 
-        const finalData = { ...state, following: updatedFollowing };
-        localStorage.setItem("user", JSON.stringify(finalData));
-        return finalData;
+        state.following = updatedFollowing;
+        localStorage.setItem("user", JSON.stringify(state));
       }
     },
   },

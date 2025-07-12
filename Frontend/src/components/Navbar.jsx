@@ -1,10 +1,9 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, User, BookText, LogOut } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../utils/userSilce";
 import DarkModeToggle from "./DarkModeToggle";
-import { useSelector } from "react-redux";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -36,7 +35,6 @@ function Navbar() {
         <div className="flex items-center justify-between h-[64px]">
           {/* Left: Logo + Search */}
           <div className="flex items-center gap-6">
-            {/* Logo */}
             <Link
               to="/"
               className="text-2xl font-bold text-black dark:text-white"
@@ -58,7 +56,7 @@ function Navbar() {
             </div>
           </div>
 
-          {/* Nav items  */}
+          {/* Nav items */}
           <div className="flex items-center gap-6">
             <div className="hidden md:flex items-center gap-6">
               <NavLink
@@ -103,7 +101,7 @@ function Navbar() {
                 </NavLink>
               )}
 
-              {!user ? (
+              {!user._id ? (
                 <>
                   <Link
                     to="/login"
@@ -122,7 +120,7 @@ function Navbar() {
                 <div className="relative" ref={dropdownRef}>
                   <img
                     src={
-                      user?.avatar ||
+                      user?.profilePic ||
                       "https://www.shutterstock.com/image-vector/user-profile-icon-vector-avatar-600nw-2247726673.jpg"
                     }
                     alt="Profile"

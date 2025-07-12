@@ -4,7 +4,6 @@ const { generateJWT, verifyJWT } = require("../utils/generateToken");
 const transporter = require("../utils/transporter");
 const { EMAIL_USER, FRONTEND_URL } = require("../config/dotenv.config");
 
-
 // Create User
 // request :- post
 // route :- /api/v1/signup
@@ -211,22 +210,16 @@ async function login(req, res) {
   const { email, password } = req.body;
 
   try {
-    if (!password) {
+    if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Please enter the password",
-      });
-    }
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter the email",
+        message: "Please enter both email and password",
       });
     }
 
-    // Check if user exists
+    console.time("Login Total");
+
     const checkUser = await User.findOne({ email }).select("+password");
-
     if (!checkUser) {
       return res.status(404).json({
         success: false,
@@ -234,7 +227,6 @@ async function login(req, res) {
       });
     }
 
-    // Check if email is verified
     if (!checkUser.isVerify) {
       return res.status(403).json({
         success: false,
@@ -242,7 +234,6 @@ async function login(req, res) {
       });
     }
 
-    // Check if password matches
     const isPasswordMatch = await bcrypt.compare(password, checkUser.password);
     if (!isPasswordMatch) {
       return res.status(401).json({
@@ -251,7 +242,6 @@ async function login(req, res) {
       });
     }
 
-    // Generate token
     const token = await generateJWT({
       email: checkUser.email,
       id: checkUser._id,
@@ -270,8 +260,7 @@ async function login(req, res) {
         bio: checkUser.bio,
         showLikedBlogs: checkUser.showLikedBlogs,
         showSavedBlogs: checkUser.showSavedBlogs,
-        followers: checkUser.followers,
-        following: checkUser.following,
+        // omit followers/following here!
       },
     });
   } catch (error) {
@@ -279,7 +268,6 @@ async function login(req, res) {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error.message,
     });
   }
 }
@@ -418,6 +406,28 @@ async function deleteUser(req, res) {
     });
   }
 }
+
+// PUT /api/v1/profile/update-bio
+const updateBio = async (req, res) => {
+  const userId = req.user.id;
+  const { bio } = req.body;
+
+  try {
+    const updated = await User.findByIdAndUpdate(
+      userId,
+      { bio },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Bio updated",
+      bio: updated.bio,
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 // Follow User
 async function followUser(req, res) {}

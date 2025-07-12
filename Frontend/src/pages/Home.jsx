@@ -31,7 +31,7 @@ const Home = () => {
           </button>
 
           <button
-            // onClick={() => navigate("/my-blogs")}
+            onClick={() => navigate("/my-blogs")}
             className="px-6 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300"
           >
             View My Blogs

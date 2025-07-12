@@ -257,6 +257,21 @@ async function getBlog(req, res) {
   }
 }
 
+// get Users Blog
+// request :- get
+// route :- /api/v1/blogs/user
+const getUserBlogs = async (req, res) => {
+  try {
+    const blogs = await Blog.find({ creator: req.user.id })
+      .populate("creator", "name username profilePic")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ blogs });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch user's blogs." });
+  }
+};
+
 //  update Blog
 // request :- put
 // route :- /api/v1/blogs/:id
@@ -532,6 +547,7 @@ module.exports = {
   deleteBlog,
   getBlog,
   getBlogs,
+  getUserBlogs,
   updateBlog,
   likeBlog,
   saveBlog,

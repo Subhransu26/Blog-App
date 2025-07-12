@@ -10,6 +10,7 @@ const {
   saveBlog,
   searchBlogs,
   uploadEditorImage,
+  getUserBlogs,
 } = require("../controllers/blogController");
 
 const verifyUser = require("../middleware/auth");
@@ -39,6 +40,8 @@ route.post("/upload-image", verifyUser, upload.single("image"), uploadEditorImag
 route.get("/blogs", getBlogs);
 
 route.get("/blogs/:id", getBlog);
+
+route.get("/user", verifyUser, getUserBlogs);
 
 route.put(
   "/blogs/:id",

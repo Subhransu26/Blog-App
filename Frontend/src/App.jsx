@@ -11,6 +11,8 @@ import EditBlog from "./pages/EditBlog";
 import PrivateRoute from "./components/PrivateRoute";
 import Home from "./pages/Home";
 import VerifyUser from "./components/VerifyUser";
+import ProfilePage from "./pages/ProfilePage";
+import MyBlogsPage from "./pages/MyBlogsPage";
 
 function App() {
   const token = useSelector((state) => state.user.token);
@@ -31,6 +33,8 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/blogs/:id" element={<BlogDetail />} />
+        <Route path="/my-blogs" element={<MyBlogsPage />} />
+
         <Route
           path="/verify-email/:verificationToken"
           element={<VerifyUser />}
@@ -58,6 +62,14 @@ function App() {
           element={
             <PrivateRoute>
               <EditBlog />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <ProfilePage />
             </PrivateRoute>
           }
         />
