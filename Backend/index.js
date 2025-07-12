@@ -24,6 +24,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1", userRoutes);
+
 app.use("/api/v1", blogRoutes);
 
 app.listen(port, () => {

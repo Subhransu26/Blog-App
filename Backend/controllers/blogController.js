@@ -262,15 +262,39 @@ async function getBlog(req, res) {
 // route :- /api/v1/blogs/user
 const getUserBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find({ creator: req.user.id })
-      .populate("creator", "name username profilePic")
-      .sort({ createdAt: -1 });
+    const { draft } = req.query;
 
-    res.status(200).json({ blogs });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch user's blogs." });
+    const filter = { creator: req.user._id };
+    if (draft !== undefined) {
+      filter.draft = draft === "true"; // convert query string to boolean
+    }
+
+    const blogs = await Blog.find(filter).populate(
+      "creator",
+      "name username email"
+    );
+
+    if (!blogs.length) {
+      return res.status(404).json({
+        success: false,
+        message: "You don't have any blogs",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      blogs,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
+
+
+
 
 //  update Blog
 // request :- put

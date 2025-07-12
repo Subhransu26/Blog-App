@@ -39,9 +39,11 @@ route.post("/upload-image", verifyUser, upload.single("image"), uploadEditorImag
 
 route.get("/blogs", getBlogs);
 
+route.get("/blogs/user", verifyUser, getUserBlogs);
+
 route.get("/blogs/:id", getBlog);
 
-route.get("/blogs/user", verifyUser, getUserBlogs);
+
 
 route.put(
   "/blogs/:id",

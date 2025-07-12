@@ -20,10 +20,9 @@ const verifyUser = async (req, res, next) => {
         });
       }
 
-      // ✅ Set full user object (at least the id)
       req.user = {
-        id: user.id,
-        email: user.email, // optional
+        _id: user.id,
+        email: user.email,
       };
 
       next();

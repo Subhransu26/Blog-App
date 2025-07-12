@@ -20,8 +20,10 @@ const MyBlogsPage = () => {
           },
         }
       );
+      console.log("✅ My Blogs Response:", res.data);
       setBlogs(res.data.blogs || []);
     } catch (err) {
+      console.error("❌ Axios error:", err.response?.data || err.message);
       toast.error("Failed to fetch your blogs.");
     } finally {
       setLoading(false);
