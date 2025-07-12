@@ -15,9 +15,12 @@ const {
 async function createBlog(req, res) {
   try {
     const { title, description } = req.body;
-    const creator = req.user.id;
+    const creator = req.user?.id;
     console.log("User ID from token:", creator);
-
+    console.log("🔁 createBlog hit");
+    console.log("User ID from token:", req.user?.id);
+    console.log("req.body.title:", req.body.title);
+    console.log("req.files:", req.files);
 
     const content = JSON.parse(req.body.content || "{}");
     const tags = JSON.parse(req.body.tags || "[]");
@@ -55,7 +58,7 @@ async function createBlog(req, res) {
       });
     }
 
-    // ✅ Collect already-uploaded inline image URLs from EditorJS blocks
+    // Collect already-uploaded inline image URLs from EditorJS blocks
     const uploadedInlineImages = [];
     for (const block of content.blocks) {
       if (block.type === "image" && block.data?.file?.url) {
@@ -63,13 +66,13 @@ async function createBlog(req, res) {
       }
     }
 
-    // ✅ Upload blog thumbnail image to Cloudinary
+    //  Upload blog thumbnail image to Cloudinary
     const { secure_url, public_id } = await uploadImage(
       `data:image/jpeg;base64,${image.buffer.toString("base64")}`
     );
 
-    // ✅ Validate user
     const finduser = await User.findById(creator);
+    console.log("🧪 Fetched User:", finduser);
     if (!finduser) {
       return res.status(404).json({
         success: false,
@@ -152,7 +155,6 @@ async function uploadEditorImage(req, res) {
     });
   }
 }
-
 
 //  get Blogs
 // request :- get

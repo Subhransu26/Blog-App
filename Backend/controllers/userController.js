@@ -1,9 +1,7 @@
-const { randomUUID } = require("crypto");
 const User = require("../models/userSchema");
 const bcrypt = require("bcryptjs");
 const { generateJWT, verifyJWT } = require("../utils/generateToken");
 const transporter = require("../utils/transporter");
-const admin = require("firebase-admin");
 const { EMAIL_USER, FRONTEND_URL } = require("../config/dotenv.config");
 
 
