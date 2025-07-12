@@ -41,7 +41,7 @@ route.get("/blogs", getBlogs);
 
 route.get("/blogs/:id", getBlog);
 
-route.get("/user", verifyUser, getUserBlogs);
+route.get("/blogs/user", verifyUser, getUserBlogs);
 
 route.put(
   "/blogs/:id",
