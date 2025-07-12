@@ -2,8 +2,7 @@ const Blog = require("../models/blogSchema");
 const Comment = require("../models/commentSchema");
 const User = require("../models/userSchema");
 const { v4: uuidv4 } = require("uuid");
-// const ShortUniqueId = require("short-unique-id");
-// const { randomUUID } = new ShortUniqueId({ length: 10 });
+
 const {
   uploadImage,
   deleteImagefromCloudinary,
@@ -16,11 +15,6 @@ async function createBlog(req, res) {
   try {
     const { title, description } = req.body;
     const creator = req.user?.id;
-    console.log("User ID from token:", creator);
-    console.log("🔁 createBlog hit");
-    console.log("User ID from token:", req.user?.id);
-    console.log("req.body.title:", req.body.title);
-    console.log("req.files:", req.files);
 
     const content = JSON.parse(req.body.content || "{}");
     const tags = JSON.parse(req.body.tags || "[]");
@@ -72,7 +66,6 @@ async function createBlog(req, res) {
     );
 
     const finduser = await User.findById(creator);
-    console.log("🧪 Fetched User:", finduser);
     if (!finduser) {
       return res.status(404).json({
         success: false,
@@ -90,7 +83,7 @@ async function createBlog(req, res) {
 
     const blogId = title.toLowerCase().split(" ").join("-") + "-" + uuidv4();
 
-    // ✅ Create the blog
+    //  Create the blog
     const blog = await Blog.create({
       title,
       description,
