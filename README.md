@@ -1,38 +1,48 @@
-# 📝 Fullstack Blog Platform
+# 📝 Blogify — Fullstack Blogging Platform
 
-A feature-rich fullstack blog application built with **MERN stack** and **Tailwind CSS**, allowing users to create, edit, like, and comment on blogs — complete with image uploads, authentication, and beautiful responsive UI.
+> **Live Demo** 🌐: [https://blog-app-gw98.onrender.com](https://blog-app-gw98.onrender.com)
+
+A full-featured, responsive **MERN + Vite** blog platform with beautiful UI, markdown-style editing via **Editor.js**, image uploads, likes, user auth, and more — built with performance and user experience in mind.
 
 ---
 
 ## 🚀 Features
 
-- 🔐 **JWT Authentication** (Login & Signup)
-- 🖼️ **Image Uploads via Cloudinary** (for blog thumbnails and inline content)
-- ✍️ **Rich Text Editor** using Editor.js
-- ❤️ **Like/Unlike Blogs** (real-time toggle)
-- 💬 **Comment System** (coming soon)
-- 📁 **Draft and Publish Modes**
-- 🔎 **View Blogs by Tags**
-- 🌓 **Dark Mode Support**
-- 🎨 **Fully Responsive UI** (TailwindCSS + Font Icons)
+- 🔐 **Secure Auth**: Login, signup, and Google OAuth via JWT
+- 📝 **Rich Blog Editor**: Editor.js for clean and block-based blog creation
+- 📸 **Cloudinary Integration**: Upload inline and thumbnail images
+- ❤️ **Like & Save Blogs**: Users can like and save blogs with instant feedback
+- 💬 **Nested Comments**: Reply and interact like a discussion thread *(inspired by Medium)*
+- 🌓 **Dark Mode**: Toggle between dark and light themes
+- ✨ **Responsive Design**: Optimized for all screen sizes
+- 🏷️ **Tags & Filtering**: Discover blogs via tags
+- 📄 **Draft & Publish Support**
+- 🔎 **Profile View**: View public blogs of other users
+- 🔁 **Follow/Unfollow Users**
 
 ---
 
-## 🔧 Tech Stack
+## 🧱 Tech Stack
 
 ### 🔙 Backend
-- Node.js & Express
-- MongoDB with Mongoose
-- Cloudinary (Image hosting)
-- JWT Auth + Middleware
-- Multer (form-data handling)
+- **Node.js** + **Express.js**
+- **MongoDB** + **Mongoose**
+- **Cloudinary** for image hosting
+- **JWT** for authentication
+- **Multer** for file handling
+- **Nodemailer** (email verification)
+- **Firebase Admin SDK** *(optional)*
 
 ### 🔜 Frontend
-- React + Vite
-- Redux Toolkit for state management
-- Axios (API requests)
-- React Router v6
-- Tailwind CSS + Font Icons
-- Editor.js (for blog content)
+- **React.js** (with **Vite** for blazing fast builds)
+- **Redux Toolkit** (for global state management)
+- **Tailwind CSS** (fully responsive UI)
+- **React Router v6**
+- **Axios** (for API calls)
+- **Editor.js** (rich blog editing)
+- **React Hot Toast** (for notifications)
 
 ---
+
+
+
