@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
-import {Spinner} from "../components/Common/Spinner";
+import { Spinner } from "../components/Common/Spinner";
 import { useSelector } from "react-redux";
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
@@ -78,11 +78,17 @@ const EditBlog = () => {
   useEffect(() => {
     if (!loading && blogData.content && !editorjsRef.current) {
       const parsedContent = JSON.parse(blogData.content);
-      const editorHolder = document.getElementById("editorjs");
-      if (editorHolder) initializeEditor(parsedContent);
+      // Delay initialization to ensure #editorjs is in DOM
+      setTimeout(() => {
+        const editorHolder = document.getElementById("editorjs");
+        if (editorHolder) initializeEditor(parsedContent);
+      }, 0);
     }
     return () => {
-      if (editorjsRef.current?.destroy) {
+      if (
+        editorjsRef.current?.destroy &&
+        typeof editorjsRef.current.destroy === "function"
+      ) {
         editorjsRef.current.destroy();
         editorjsRef.current = null;
       }
@@ -105,10 +111,32 @@ const EditBlog = () => {
           class: ImageTool,
           config: {
             uploader: {
-              uploadByFile: async (image) => ({
-                success: 1,
-                file: { url: URL.createObjectURL(image), image },
-              }),
+              uploadByFile: async (file) => {
+                // Real upload example to Cloudinary (replace with your own config)
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", "your_upload_preset");
+
+                try {
+                  const response = await fetch(
+                    "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
+                    {
+                      method: "POST",
+                      body: formData,
+                    }
+                  );
+                  const data = await response.json();
+                  return {
+                    success: 1,
+                    file: {
+                      url: data.secure_url,
+                    },
+                  };
+                } catch (error) {
+                  toast.error("Image upload failed");
+                  return { success: 0 };
+                }
+              },
             },
           },
         },
@@ -116,7 +144,10 @@ const EditBlog = () => {
       tunes: ["textVariant"],
       onChange: async () => {
         const content = await editorjsRef.current.save();
-        setBlogData((prev) => ({ ...prev, content: JSON.stringify(content) }));
+        setBlogData((prev) => ({
+          ...prev,
+          content: JSON.stringify(content),
+        }));
       },
     });
   };
@@ -136,6 +167,14 @@ const EditBlog = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (loading || submitting) return;
+
+    if (!blogData.content) {
+      toast.error("Blog content cannot be empty");
+      return;
+    }
+
     setSubmitting(true);
 
     const formData = new FormData();
@@ -188,6 +227,7 @@ const EditBlog = () => {
               onChange={handleChange}
               className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter blog title"
+              required
             />
           </div>
 
@@ -202,6 +242,7 @@ const EditBlog = () => {
               className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows="3"
               placeholder="Brief description of your blog"
+              required
             />
           </div>
 
@@ -225,14 +266,12 @@ const EditBlog = () => {
           </div>
 
           <div>
-            <label className="block text-lg font-semibold mb-2">
-              Thumbnail
-            </label>
+            <label className="block text-lg font-semibold mb-2">Thumbnail</label>
             <div className="mb-4">
               {newThumb ? (
-                <img src={newThumb} className="w-48 rounded-lg shadow-md" />
+                <img src={newThumb} alt="New Thumbnail" className="w-48 rounded-lg shadow-md" />
               ) : existingThumb ? (
-                <img src={existingThumb} className="w-48 rounded-lg shadow-md" />
+                <img src={existingThumb} alt="Existing Thumbnail" className="w-48 rounded-lg shadow-md" />
               ) : null}
             </div>
             <input
@@ -265,6 +304,14 @@ const EditBlog = () => {
             } text-white shadow-lg`}
           >
             {submitting ? "Updating..." : "Update Blog"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="w-full mt-4 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg"
+          >
+            Cancel
           </button>
         </form>
       </div>
