@@ -16,6 +16,8 @@ async function createBlog(req, res) {
   try {
     const { title, description } = req.body;
     const creator = req.user.id;
+    console.log("User ID from token:", creator);
+
 
     const content = JSON.parse(req.body.content || "{}");
     const tags = JSON.parse(req.body.tags || "[]");

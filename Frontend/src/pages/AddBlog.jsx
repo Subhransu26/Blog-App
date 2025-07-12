@@ -15,13 +15,13 @@ import { removeSelectedBlog } from "../utils/selectedBlogSlice";
 
 const AddBlog = () => {
   const editorjsRef = useRef(null);
-  const token = useSelector((slice) => slice.user?.token);
+  const token = useSelector((s) => s.user?.token);
 
   const [loading, setLoading] = useState(false);
+  const [thumbUrl, setThumbUrl] = useState(""); 
   const [blogData, setBlogData] = useState({
     title: "",
     description: "",
-    content: "",
     tags: "",
     image: null,
     images: [],
@@ -31,59 +31,53 @@ const AddBlog = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleChange = (e) => {
-    const { name, value, files, type } = e.target;
-
+  /* ---------- input handlers ---------- */
+  const handleChange = ({ target }) => {
+    const { name, value, files, type } = target;
     if (type === "file") {
       if (name === "image") {
-        setBlogData((prev) => ({ ...prev, image: files[0] }));
+        setBlogData((p) => ({ ...p, image: files[0] }));
       } else {
-        setBlogData((prev) => ({ ...prev, images: Array.from(files) }));
+        setBlogData((p) => ({ ...p, images: Array.from(files) }));
       }
     } else {
-      setBlogData((prev) => ({ ...prev, [name]: value }));
+      setBlogData((p) => ({ ...p, [name]: value }));
     }
   };
 
-  const handleCheckbox = () => {
-    setBlogData((prev) => ({ ...prev, draft: !prev.draft }));
-  };
+  const handleCheckbox = () => setBlogData((p) => ({ ...p, draft: !p.draft }));
 
+  /* ---------- submit ---------- */
   const handlePostBlog = async () => {
-    setLoading(true);
-
-    if (editorjsRef.current) {
-      try {
-        const data = await editorjsRef.current.save();
-        setBlogData((prev) => ({ ...prev, content: JSON.stringify(data) }));
-      } catch (err) {
-        toast.error("Failed to read editor content");
-        setLoading(false);
-        return;
-      }
+    if (!editorjsRef.current) {
+      toast.error("Editor not ready.");
+      return;
     }
 
-    const formData = new FormData();
-
-    formData.append("title", blogData.title);
-    formData.append("description", blogData.description);
-
+    setLoading(true);
+    let editorData;
     try {
-      const parsedContent = JSON.parse(blogData.content);
-      formData.append("content", JSON.stringify(parsedContent));
-    } catch (err) {
-      toast.error("Content must be valid JSON.");
+      editorData = await editorjsRef.current.save();
+    } catch {
+      toast.error("Failed to read editor content");
       setLoading(false);
       return;
     }
 
-    const tagArray = blogData.tags
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0);
-    formData.append("tags", JSON.stringify(tagArray));
+    const formData = new FormData();
+    formData.append("title", blogData.title);
+    formData.append("description", blogData.description);
+    formData.append("content", JSON.stringify(editorData));
+    formData.append(
+      "tags",
+      JSON.stringify(
+        blogData.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      )
+    );
     formData.append("draft", blogData.draft);
-
     if (blogData.image) formData.append("image", blogData.image);
     blogData.images.forEach((img) => formData.append("images", img));
 
@@ -98,31 +92,30 @@ const AddBlog = () => {
           },
         }
       );
-
       toast.success(res.data.message);
       setBlogData({
         title: "",
         description: "",
-        content: "",
         tags: "",
         image: null,
         images: [],
         draft: false,
       });
-
+      setThumbUrl("");
       navigate("/blogs");
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Something went wrong.");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Something went wrong.");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
     }
   };
 
-  const initializeEditorjs = () => {
+  /* ---------- EditorJS ---------- */
+  const initEditor = () => {
     if (editorjsRef.current) return;
 
-    const editor = new EditorJS({
+    editorjsRef.current = new EditorJS({
       holder: "editorjs",
       placeholder: "Write your amazing blog...",
       data: { blocks: [] },
@@ -137,22 +130,21 @@ const AddBlog = () => {
           },
         },
         List: { class: NestedList, inlineToolbar: true },
-        Marker: Marker,
-        Underline: Underline,
-        Embed: Embed,
+        Marker,
+        Underline,
+        Embed,
         textVariant: TextVariantTune,
         image: {
           class: ImageTool,
           config: {
             uploader: {
               uploadByFile: async (image) => {
-                const formData = new FormData();
-                formData.append("image", image);
-
+                const fd = new FormData();
+                fd.append("image", image);
                 try {
-                  const res = await axios.post(
+                  const { data } = await axios.post(
                     `${import.meta.env.VITE_BACKEND_URL}/upload-image`,
-                    formData,
+                    fd,
                     {
                       headers: {
                         "Content-Type": "multipart/form-data",
@@ -160,18 +152,11 @@ const AddBlog = () => {
                       },
                     }
                   );
-
-                  const { file } = res.data;
-
                   return {
                     success: 1,
-                    file: {
-                      url: file.url,
-                      imageId: file.imageId,
-                    },
+                    file: { url: data.file.url, imageId: data.file.imageId },
                   };
-                } catch (err) {
-                  console.error("EditorJS upload error:", err);
+                } catch {
                   return { success: 0 };
                 }
               },
@@ -180,42 +165,37 @@ const AddBlog = () => {
         },
       },
       tunes: ["textVariant"],
-      onReady: () => {
-        editorjsRef.current = editor;
-      },
-      onChange: async () => {
-        const data = await editor.save();
-        setBlogData((prev) => ({ ...prev, content: JSON.stringify(data) }));
-      },
     });
   };
 
+  /* ---------- effects ---------- */
   useEffect(() => {
     dispatch(removeSelectedBlog());
   }, [dispatch]);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (document.getElementById("editorjs") && !editorjsRef.current) {
-        initializeEditorjs();
-      }
-    }, 0);
-
+    if (document.getElementById("editorjs") && !editorjsRef.current)
+      initEditor();
     return () => {
-      clearTimeout(timeout);
-      if (editorjsRef.current?.destroy) {
-        editorjsRef.current.destroy();
-        editorjsRef.current = null;
-      }
+      editorjsRef.current?.destroy?.();
+      editorjsRef.current = null;
     };
   }, []);
+
+  // preview for thumbnail
+  useEffect(() => {
+    if (!blogData.image) return;
+    const url = URL.createObjectURL(blogData.image);
+    setThumbUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [blogData.image]);
 
   if (!token) return <Navigate to="/login" />;
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 px-4 py-12">
-      <div className="max-w-5xl mx-auto bg-white dark:bg-gray-800 p-10 rounded-3xl shadow-2xl transition-all space-y-8">
-        <h1 className="text-center text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 drop-shadow-md">
+      <div className="max-w-5xl mx-auto bg-white dark:bg-gray-800 p-10 rounded-3xl shadow-2xl space-y-8">
+        <h1 className="text-center text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">
           Write a New Blog
         </h1>
 
@@ -230,7 +210,7 @@ const AddBlog = () => {
             value={blogData.title}
             onChange={handleChange}
             placeholder="title of the blog"
-            className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none"
+            className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500"
           />
         </div>
 
@@ -244,8 +224,8 @@ const AddBlog = () => {
             value={blogData.description}
             onChange={handleChange}
             rows={3}
-            placeholder="A brief overview of the blog..."
-            className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none resize-none"
+            placeholder="A brief overview..."
+            className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
           />
         </div>
 
@@ -260,7 +240,7 @@ const AddBlog = () => {
             value={blogData.tags}
             onChange={handleChange}
             placeholder="e.g. tech, react, startup"
-            className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none"
+            className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500"
           />
         </div>
 
@@ -271,7 +251,7 @@ const AddBlog = () => {
           </label>
           <div
             id="editorjs"
-            className="min-h-[300px] pt-4 border rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 dark:text-white text-gray-800"
+            className="min-h-[300px] pt-4 border rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700"
           />
         </div>
 
@@ -282,16 +262,18 @@ const AddBlog = () => {
           </label>
           <label
             htmlFor="image"
-            className="block cursor-pointer border-2 border-dashed rounded-lg p-4 text-center hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+            className="block cursor-pointer border-2 border-dashed rounded-lg p-4 text-center hover:bg-gray-50 dark:hover:bg-gray-700"
           >
-            {blogData.image ? (
+            {thumbUrl ? (
               <img
-                src={URL.createObjectURL(blogData.image)}
-                alt="Thumbnail Preview"
+                src={thumbUrl}
+                alt="Thumbnail"
                 className="mx-auto h-48 object-contain rounded-lg"
               />
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">Click to upload</p>
+              <p className="text-gray-500 dark:text-gray-400">
+                Click to upload
+              </p>
             )}
           </label>
           <input
@@ -304,7 +286,7 @@ const AddBlog = () => {
           />
         </div>
 
-        {/* Draft Checkbox */}
+        {/* Draft */}
         <div className="flex items-center space-x-2">
           <input
             id="draft"
@@ -313,18 +295,23 @@ const AddBlog = () => {
             onChange={handleCheckbox}
             className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600"
           />
-          <label htmlFor="draft" className="text-sm text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor="draft"
+            className="text-sm text-gray-700 dark:text-gray-300"
+          >
             Save as Draft
           </label>
         </div>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <div className="pt-4">
           <button
             onClick={handlePostBlog}
             disabled={loading}
-            className={`w-full flex items-center justify-center gap-3 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 py-3 rounded-xl shadow-lg transition-all duration-300 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
+            className={`w-full flex items-center justify-center gap-3 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-500 py-3 rounded-xl shadow-lg ${
+              loading
+                ? "opacity-70 cursor-not-allowed"
+                : "hover:from-purple-700 hover:to-pink-600"
             }`}
           >
             {loading && (
