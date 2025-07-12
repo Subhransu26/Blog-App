@@ -147,31 +147,31 @@ const AddBlog = () => {
             uploader: {
               uploadByFile: async (image) => {
                 const formData = new FormData();
-                formData.append("file", image);
-                formData.append("upload_preset", "your_upload_preset"); 
-                formData.append("cloud_name", "your_cloud_name"); 
-                formData.append("folder", "blog_inline_images");
+                formData.append("image", image);
 
                 try {
-                  const res = await fetch(
-                    "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload", // 🔁 change this
+                  const res = await axios.post(
+                    `${import.meta.env.VITE_BACKEND_URL}/upload-image`,
+                    formData,
                     {
-                      method: "POST",
-                      body: formData,
+                      headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: `Bearer ${token}`,
+                      },
                     }
                   );
 
-                  const data = await res.json();
-                  if (data.secure_url) {
-                    return {
-                      success: 1,
-                      file: { url: data.secure_url },
-                    };
-                  } else {
-                    throw new Error("Upload failed");
-                  }
+                  const { file } = res.data;
+
+                  return {
+                    success: 1,
+                    file: {
+                      url: file.url,
+                      imageId: file.imageId,
+                    },
+                  };
                 } catch (err) {
-                  console.error("Image upload failed:", err);
+                  console.error("EditorJS upload error:", err);
                   return { success: 0 };
                 }
               },
@@ -220,60 +220,89 @@ const AddBlog = () => {
         </h1>
 
         {/* Title */}
-        <input
-          type="text"
-          name="title"
-          value={blogData.title}
-          onChange={handleChange}
-          placeholder="Blog Title"
-          className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Blog Title
+          </label>
+          <input
+            type="text"
+            name="title"
+            value={blogData.title}
+            onChange={handleChange}
+            placeholder="title of the blog"
+            className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none"
+          />
+        </div>
 
         {/* Description */}
-        <textarea
-          name="description"
-          value={blogData.description}
-          onChange={handleChange}
-          placeholder="A brief overview of the blog..."
-          rows={3}
-          className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white resize-none"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Description
+          </label>
+          <textarea
+            name="description"
+            value={blogData.description}
+            onChange={handleChange}
+            rows={3}
+            placeholder="A brief overview of the blog..."
+            className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none resize-none"
+          />
+        </div>
 
         {/* Tags */}
-        <input
-          type="text"
-          name="tags"
-          value={blogData.tags}
-          onChange={handleChange}
-          placeholder="e.g. tech, react, startup"
-          className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Tags (comma separated)
+          </label>
+          <input
+            type="text"
+            name="tags"
+            value={blogData.tags}
+            onChange={handleChange}
+            placeholder="e.g. tech, react, startup"
+            className="w-full p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none"
+          />
+        </div>
 
         {/* Content */}
-        <div id="editorjs" className="min-h-[300px] p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700" />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Content
+          </label>
+          <div
+            id="editorjs"
+            className="min-h-[300px] pt-4 border rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 dark:text-white text-gray-800"
+          />
+        </div>
 
         {/* Thumbnail */}
-        <label htmlFor="image" className="block mt-4">
-          {blogData.image ? (
-            <img
-              src={URL.createObjectURL(blogData.image)}
-              alt="Thumbnail Preview"
-              className="h-48 w-auto mx-auto object-contain rounded-lg"
-            />
-          ) : (
-            <div className="border-2 border-dashed p-4 text-center rounded-lg text-gray-500 dark:text-gray-400">
-              Click to upload thumbnail
-            </div>
-          )}
-        </label>
-        <input
-          type="file"
-          id="image"
-          name="image"
-          accept="image/*"
-          onChange={handleChange}
-          className="hidden"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Thumbnail Image
+          </label>
+          <label
+            htmlFor="image"
+            className="block cursor-pointer border-2 border-dashed rounded-lg p-4 text-center hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+          >
+            {blogData.image ? (
+              <img
+                src={URL.createObjectURL(blogData.image)}
+                alt="Thumbnail Preview"
+                className="mx-auto h-48 object-contain rounded-lg"
+              />
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">Click to upload</p>
+            )}
+          </label>
+          <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/*"
+            onChange={handleChange}
+            className="hidden"
+          />
+        </div>
 
         {/* Draft Checkbox */}
         <div className="flex items-center space-x-2">
@@ -282,7 +311,7 @@ const AddBlog = () => {
             type="checkbox"
             checked={blogData.draft}
             onChange={handleCheckbox}
-            className="w-4 h-4 text-purple-600 rounded border-gray-300"
+            className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600"
           />
           <label htmlFor="draft" className="text-sm text-gray-700 dark:text-gray-300">
             Save as Draft
@@ -290,15 +319,20 @@ const AddBlog = () => {
         </div>
 
         {/* Submit Button */}
-        <button
-          onClick={handlePostBlog}
-          disabled={loading}
-          className={`w-full mt-4 text-lg font-semibold text-white py-3 rounded-xl shadow-lg bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 ${
-            loading ? "opacity-70 cursor-not-allowed" : ""
-          }`}
-        >
-          {loading ? "Publishing..." : "Publish Blog"}
-        </button>
+        <div className="pt-4">
+          <button
+            onClick={handlePostBlog}
+            disabled={loading}
+            className={`w-full flex items-center justify-center gap-3 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 py-3 rounded-xl shadow-lg transition-all duration-300 ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
+          >
+            {loading && (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {loading ? "Publishing..." : "Publish Blog"}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -117,6 +117,41 @@ async function createBlog(req, res) {
     });
   }
 }
+
+// Upload EditorJS inline image
+async function uploadEditorImage(req, res) {
+  try {
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image file uploaded",
+      });
+    }
+
+    const { secure_url, public_id } = await uploadImage(
+      `data:image/jpeg;base64,${file.buffer.toString("base64")}`
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Image uploaded successfully",
+      file: {
+        url: secure_url,
+        imageId: public_id,
+      },
+    });
+  } catch (error) {
+    console.error("Editor image upload failed:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to upload image",
+    });
+  }
+}
+
+
 //  get Blogs
 // request :- get
 // route :- /api/v1/blogs
@@ -496,6 +531,7 @@ async function searchBlogs(req, res) {}
 
 module.exports = {
   createBlog,
+  uploadEditorImage,
   deleteBlog,
   getBlog,
   getBlogs,
