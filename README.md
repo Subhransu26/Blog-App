@@ -8,11 +8,11 @@ A full-featured, responsive **MERN + Vite** blog platform with beautiful UI, mar
 
 ## 🚀 Features
 
-- 🔐 **Secure Auth**: Login, signup, and Google OAuth via JWT
+- 🔐 **Secure Auth**: Login, signup, Verify Email
 - 📝 **Rich Blog Editor**: Editor.js for clean and block-based blog creation
 - 📸 **Cloudinary Integration**: Upload inline and thumbnail images
 - ❤️ **Like & Save Blogs**: Users can like and save blogs with instant feedback
-- 💬 **Nested Comments**: Reply and interact like a discussion thread *(inspired by Medium)*
+- 💬 **Nested Comments**: Reply and interact like a discussion thread 
 - 🌓 **Dark Mode**: Toggle between dark and light themes
 - ✨ **Responsive Design**: Optimized for all screen sizes
 - 🏷️ **Tags & Filtering**: Discover blogs via tags
@@ -31,7 +31,6 @@ A full-featured, responsive **MERN + Vite** blog platform with beautiful UI, mar
 - **JWT** for authentication
 - **Multer** for file handling
 - **Nodemailer** (email verification)
-- **Firebase Admin SDK** *(optional)*
 
 ### 🔜 Frontend
 - **React.js** (with **Vite** for blazing fast builds)
