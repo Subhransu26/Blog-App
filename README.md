@@ -1,6 +1,6 @@
 # 📝 Blogify — Fullstack Blogging Platform
 
-> **Live Demo** 🌐: [https://blog-app-gw98.onrender.com](https://blog-app-gw98.onrender.com)
+> **Live Demo** 🌐: [Blog App](https://blog-app-gw98.onrender.com)
 
 A full-featured, responsive **MERN + Vite** blog platform with beautiful UI, markdown-style editing via **Editor.js**, image uploads, likes, user auth, and more — built with performance and user experience in mind.
 
