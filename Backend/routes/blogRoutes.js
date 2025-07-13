@@ -70,6 +70,6 @@ route.patch("/blogs/like-comment/:id", verifyUser, likeComment);
 // for nested comment
 route.post("/comment/:parentCommentId/:id", verifyUser, addNestedComment);
 
-route.get("/blogs/comments/:id", getComments);
+route.get("/blogs/comment/:id", getComments);
 
 module.exports = route;
