@@ -1,34 +1,40 @@
 const express = require("express");
+const path = require("path");
+const cors = require("cors");
 const dbConnect = require("./config/dbConnect");
+const cloudinaryConfig = require("./config/cloudinaryConfig");
 const { PORT, FRONTEND_URL } = require("./config/dotenv.config");
+
 const userRoutes = require("./routes/userRoutes");
 const blogRoutes = require("./routes/blogRoutes");
-const cloudinaryConfig = require("./config/cloudinaryConfig");
-const cors = require("cors");
 
 const app = express();
+const port = PORT || 5000;
 
+// Enable CORS
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://blog-app-gw98.onrender.com"],
+    origin: ["http://localhost:5173", FRONTEND_URL],
     credentials: true,
   })
 );
 
+// Middleware
 app.use(express.json());
 
-const port = PORT || 5000;
+// Connect to DB and Cloudinary
+dbConnect();
+cloudinaryConfig();
 
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
-
+// API routes
 app.use("/api/v1", userRoutes);
-
 app.use("/api/v1", blogRoutes);
 
+// Serve frontend build files
+app.use("/", express.static(path.join(__dirname, "../Frontend/dist")));
+
+
+// Start server
 app.listen(port, () => {
-  console.log(`Server Started at port ${port}`);
-  dbConnect();
-  cloudinaryConfig();
+  console.log(`✅ Server started at http://localhost:${port}`);
 });
