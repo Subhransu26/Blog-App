@@ -24,13 +24,15 @@ const selectedBlogSlice = createSlice({
 
     changeLikes(state, action) {
       const userId = action.payload;
-      if (state.likes.includes(userId)) {
-        state.likes = state.likes.filter((id) => id !== userId);
-      } else {
-        state.likes.push(userId);
-      }
-    }, 
 
+      const hasLiked = state.likes.some((id) => id.toString() === userId);
+
+      if (hasLiked) {
+        state.likes = state.likes.filter((id) => id.toString() !== userId);
+      } else {
+        state.likes.push(userId); // push string
+      }
+    },
     setComments(state, action) {
       state.comments = [...state.comments, action.payload];
     },

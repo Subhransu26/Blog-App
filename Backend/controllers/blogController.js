@@ -200,16 +200,29 @@ async function getBlog(req, res) {
     const { id } = req.params;
 
     const blog = await Blog.findOne({ blogId: id })
-      .populate({
-        path: "comments",
-        populate: {
-          path: "user",
-          select: "name email username profilePic",
-        },
-      })
+      .select("_id title content image blogId likes")
       .populate({
         path: "creator",
         select: "name username email followers profilePic",
+      })
+      .populate({
+        path: "comments",
+        match: { parentComment: null }, // only top-level comments
+        options: { sort: { createdAt: -1 } }, // latest first
+        populate: [
+          {
+            path: "user",
+            select: "name username email profilePic",
+          },
+          {
+            path: "replies",
+            options: { sort: { createdAt: 1 } }, // oldest first for replies
+            populate: {
+              path: "user",
+              select: "name username email profilePic",
+            },
+          },
+        ],
       })
       .lean();
 
@@ -220,29 +233,6 @@ async function getBlog(req, res) {
       });
     }
 
-    async function populateReplies(comments) {
-      for (const comment of comments) {
-        let populatedComment = await Comment.findById(comment._id)
-          .populate({
-            path: "replies",
-            populate: {
-              path: "user",
-              select: "name email username profilePic",
-            },
-          })
-          .lean();
-
-        comment.replies = populatedComment?.replies || [];
-
-        if (comment.replies && comment.replies.length > 0) {
-          await populateReplies(comment.replies);
-        }
-      }
-      return comments;
-    }
-
-    blog.comments = await populateReplies(blog.comments);
-
     return res.status(200).json({
       success: true,
       message: "Blog fetched successfully",
@@ -250,9 +240,9 @@ async function getBlog(req, res) {
     });
   } catch (error) {
     console.error("Error in getBlog:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Server Error",
     });
   }
 }
@@ -292,9 +282,6 @@ const getUserBlogs = async (req, res) => {
     });
   }
 };
-
-
-
 
 //  update Blog
 // request :- put
@@ -473,44 +460,42 @@ async function deleteBlog(req, res) {
 async function likeBlog(req, res) {
   try {
     const userId = req.user.id;
-    const { id } = req.params;
+    const { id: blogId } = req.params;
 
     // Find Blog by ID
-    const blog = await Blog.findOne({ blogId: id });
+    const blog = await Blog.findOne({ blogId });
+    if (!blog)
+      return res
+        .status(404)
+        .json({ success: false, message: "Blog not found" });
 
-    if (!blog) {
-      return res.status(404).json({
-        success: false,
-        message: "Blog not found",
-      });
-    }
+    const alreadyLiked = blog.likes.includes(userId);
+    const update = alreadyLiked
+      ? { $pull: { likes: userId } }
+      : { $addToSet: { likes: userId } };
 
-    // Like/Dislike Logic
-    if (!blog.likes.includes(userId)) {
-      await Blog.updateOne({ blogId: id }, { $push: { likes: userId } });
-      await User.findByIdAndUpdate(userId, { $push: { likeBlogs: blog._id } });
-
-      return res.status(200).json({
-        success: true,
-        message: "Blog Liked Successfully",
-        isLiked: true,
-      });
-    } else {
-      await Blog.updateOne({ blogId: id }, { $pull: { likes: userId } });
-      await User.findByIdAndUpdate(userId, { $pull: { likeBlogs: blog._id } });
-
-      return res.status(200).json({
-        success: true,
-        message: "Blog Disliked successfully",
-        isLiked: false,
-      });
-    }
-  } catch (error) {
-    console.error("Error toggling like on blog: \n", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
+    const updatedBlog = await Blog.findOneAndUpdate({ blogId }, update, {
+      new: true,
+      select: "likes",
     });
+
+    const userUpdate = alreadyLiked ? "$pull" : "$addToSet";
+    await User.findByIdAndUpdate(
+      userId,
+      { [userUpdate]: { likeBlogs: blog._id } },
+      { new: false }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: alreadyLiked ? "Blog un‑liked" : "Blog liked",
+      isLiked: !alreadyLiked,
+      likesCount: updatedBlog.likes.length,
+      likes: updatedBlog.likes,
+    });
+  } catch (err) {
+    console.error("likeBlog:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 }
 

@@ -1,10 +1,9 @@
-// imports ...
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import toast from "react-hot-toast";
-import {Spinner} from "../components/Common/Spinner";
+import { Spinner } from "../components/Common/Spinner";
 import ShareDropdown from "../components/Dropdown/ShareDropdown";
 import {
   addSelectedBlog,
@@ -27,11 +26,12 @@ const BlogDetail = () => {
 
   const fetchBlog = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`);
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`
+      );
       const fetchedBlog = res.data.blog;
       setBlog(fetchedBlog);
       dispatch(addSelectedBlog(fetchedBlog));
-      setIsLike(fetchedBlog.likes.includes(userId));
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to load blog");
     } finally {
@@ -39,9 +39,16 @@ const BlogDetail = () => {
     }
   };
 
+  // ✅ Fix: set isLike after blog and userId are both loaded
+  useEffect(() => {
+    if (blog && userId) {
+      const liked = blog.likes?.some((id) => id.toString() === userId);
+      setIsLike(liked);
+    }
+  }, [blog, userId]);
+
   const handleLike = async () => {
     if (!token) return toast.error("Please sign in to like this blog");
-    setIsLike(prev => !prev);
 
     try {
       const res = await axios.post(
@@ -49,25 +56,28 @@ const BlogDetail = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      const updated = res.data.isLiked;
+      setIsLike(updated);
       dispatch(changeLikes(userId));
-      toast.success(res.data.message);
-      setBlog(prevBlog => ({
-        ...prevBlog,
-        likes: isLike
-          ? prevBlog.likes.filter(id => id !== userId)
-          : [...prevBlog.likes, userId],
+
+      setBlog((prev) => ({
+        ...prev,
+        likes: updated
+          ? [...prev.likes, userId]
+          : prev.likes.filter((id) => id.toString() !== userId),
       }));
-    } catch {
+
+      toast.success(res.data.message);
+    } catch (err) {
       toast.error("Failed to like blog");
     }
   };
 
   useEffect(() => {
     fetchBlog();
-    return () => {
-      dispatch(removeSelectedBlog());
-    };
-  }, [id]);
+    return () => dispatch(removeSelectedBlog());
+  }, [id, dispatch]);
 
   const renderContent = (content) => {
     if (!content || !Array.isArray(content.blocks)) return null;
@@ -84,11 +94,14 @@ const BlogDetail = () => {
           );
         case "paragraph":
           return (
-            <p key={idx} className="text-lg leading-8 mb-6 text-gray-800 dark:text-gray-200">
+            <p
+              key={idx}
+              className="text-lg leading-8 mb-6 text-gray-800 dark:text-gray-200"
+            >
               {block.data.text}
             </p>
           );
-        case "image":
+        case "image": {
           const imageUrl = block.data?.file?.url;
           return imageUrl ? (
             <div key={idx} className="w-full my-8 flex justify-center">
@@ -99,9 +112,13 @@ const BlogDetail = () => {
               />
             </div>
           ) : null;
+        }
         case "list":
           return (
-            <ul key={idx} className="list-disc pl-6 mb-6 text-gray-800 dark:text-gray-200">
+            <ul
+              key={idx}
+              className="list-disc pl-6 mb-6 text-gray-800 dark:text-gray-200"
+            >
               {block.data.items.map((item, i) => (
                 <li key={i}>{item}</li>
               ))}
@@ -109,7 +126,10 @@ const BlogDetail = () => {
           );
         default:
           return (
-            <div key={idx} className="bg-gray-100 dark:bg-gray-700 text-sm p-3 rounded mb-4">
+            <div
+              key={idx}
+              className="bg-gray-100 dark:bg-gray-700 text-sm p-3 rounded mb-4"
+            >
               ⚠️ Unsupported block type: <code>{block.type}</code>
             </div>
           );
@@ -130,7 +150,9 @@ const BlogDetail = () => {
     <div className="min-h-screen px-4 py-10 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white transition duration-300">
       <div className={`${isCommentOpen ? "blur-sm" : ""} transition-all`}>
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl font-extrabold leading-tight mb-2">{blog.title}</h1>
+          <h1 className="text-4xl font-extrabold leading-tight mb-2">
+            {blog.title}
+          </h1>
           <div className="flex items-center gap-2 text-lg text-gray-600 dark:text-gray-400 mb-6">
             <span className="font-medium">
               {blog.creator?.name || blog.creator?.username || "Anonymous"}
@@ -204,11 +226,12 @@ const BlogDetail = () => {
             </div>
           )}
 
-          {/* Render blog content safely */}
           <article className="prose dark:prose-invert prose-lg max-w-none">
-            {blog.content?.blocks?.length > 0
-              ? renderContent(blog.content)
-              : <p className="text-gray-400">No content available.</p>}
+            {blog.content?.blocks?.length > 0 ? (
+              renderContent(blog.content)
+            ) : (
+              <p className="text-gray-400">No content available.</p>
+            )}
           </article>
 
           {token && userId && blog?.creator?._id === userId && (

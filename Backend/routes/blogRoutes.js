@@ -21,6 +21,7 @@ const {
   editComment,
   likeComment,
   addNestedComment,
+  getComments,
 } = require("../controllers/commentController");
 const upload = require("../utils/multer");
 
@@ -68,5 +69,7 @@ route.patch("/blogs/like-comment/:id", verifyUser, likeComment);
 
 // for nested comment
 route.post("/comment/:parentCommentId/:id", verifyUser, addNestedComment);
+
+route.get("/blogs/comments/:id", getComments);
 
 module.exports = route;

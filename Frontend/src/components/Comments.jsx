@@ -19,14 +19,16 @@ function Comment() {
 
   const [comment, setComment] = useState("");
   const [activeReply, setActiveReply] = useState(null);
-  const [currentPopup, setCurrentPopup] = useState(null);
   const [currentEditComment, setCurrentEditComment] = useState(null);
+  const [updatedCommentContent, setUpdatedCommentContent] = useState("");
 
   const {
     _id: blogId,
     comments,
     creator: { _id: creatorId },
   } = useSelector((state) => state.selectedBlog);
+
+  console.log("comment.user", comment.user);
 
   const { token, id: userId } = useSelector((state) => state.user);
 
@@ -88,10 +90,13 @@ function Comment() {
           token={token}
           activeReply={activeReply}
           setActiveReply={setActiveReply}
-          currentPopup={currentPopup}
-          setCurrentPopup={setCurrentPopup}
           currentEditComment={currentEditComment}
-          setCurrentEditComment={setCurrentEditComment}
+          setCurrentEditComment={(id, content) => {
+            setCurrentEditComment(id);
+            setUpdatedCommentContent(content);
+          }}
+          updatedCommentContent={updatedCommentContent}
+          setUpdatedCommentContent={setUpdatedCommentContent}
           creatorId={creatorId}
         />
       </div>
@@ -104,30 +109,30 @@ function DisplayComments({
   userId,
   blogId,
   token,
-  setActiveReply,
   activeReply,
-  currentPopup,
-  setCurrentPopup,
+  setActiveReply,
   currentEditComment,
   setCurrentEditComment,
+  updatedCommentContent,
+  setUpdatedCommentContent,
   creatorId,
 }) {
-  const [reply, setReply] = useState("");
-  const [updatedCommentContent, setUpdatedCommentContent] = useState("");
   const dispatch = useDispatch();
+  const [reply, setReply] = useState("");
 
   async function handleReply(parentCommentId) {
+    if (!reply.trim()) return toast.error("Reply cannot be empty");
+
     try {
       const res = await axios.post(
-        `${
-          import.meta.env.VITE_BACKEND_URL
-        }/comment/${parentCommentId}/${blogId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/comment/${parentCommentId}/${blogId}`,
         { reply },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      toast.success("Reply added");
+      dispatch(setReplies(res.data.newReply));
       setReply("");
       setActiveReply(null);
-      dispatch(setReplies(res.data.newReply));
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to add reply");
     }
@@ -147,11 +152,10 @@ function DisplayComments({
     }
   }
 
-  function handleActiveReply(id) {
-    setActiveReply((prev) => (prev === id ? null : id));
-  }
-
   async function handleCommentUpdate(id) {
+    if (!updatedCommentContent.trim())
+      return toast.error("Updated comment cannot be empty");
+
     try {
       const res = await axios.patch(
         `${import.meta.env.VITE_BACKEND_URL}/blogs/edit-comment/${id}`,
@@ -195,12 +199,12 @@ function DisplayComments({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Comment Display */}
+          {/* Comment */}
           <div className="flex items-start gap-3 relative">
             <img
               src={
                 comment.user?.profilePic ||
-                `https://api.dicebear.com/9.x/initials/svg?seed=${comment.user.name}`
+                `https://api.dicebear.com/9.x/initials/svg?seed=${comment.user?.name || "User"}`
               }
               alt={comment.user?.name}
               className="w-8 h-8 rounded-full object-cover"
@@ -217,6 +221,7 @@ function DisplayComments({
                   {formatDate(comment.createdAt)}
                 </span>
               </div>
+
               <p className="mt-1 whitespace-pre-line text-gray-800 dark:text-gray-200">
                 {comment.comment}
               </p>
@@ -236,13 +241,15 @@ function DisplayComments({
                   <span>{comment.likes?.length}</span>
                 </button>
 
-                <button onClick={() => handleActiveReply(comment._id)}>
-                  Reply
-                </button>
+                <button onClick={() => setActiveReply(comment._id)}>Reply</button>
 
                 {(comment.user?._id === userId || creatorId === userId) && (
                   <>
-                    <button onClick={() => setCurrentEditComment(comment._id)}>
+                    <button
+                      onClick={() =>
+                        setCurrentEditComment(comment._id, comment.comment)
+                      }
+                    >
                       Edit
                     </button>
                     <button onClick={() => handleCommentDelete(comment._id)}>
@@ -254,7 +261,7 @@ function DisplayComments({
             </div>
           </div>
 
-          {/* Edit Section */}
+          {/* Edit Area */}
           <AnimatePresence>
             {currentEditComment === comment._id && (
               <motion.div
@@ -286,7 +293,7 @@ function DisplayComments({
             )}
           </AnimatePresence>
 
-          {/* Reply Section */}
+          {/* Reply Box */}
           <AnimatePresence>
             {activeReply === comment._id && (
               <motion.div
@@ -312,7 +319,7 @@ function DisplayComments({
             )}
           </AnimatePresence>
 
-          {/* Recursive Replies */}
+          {/* Recursive replies */}
           {comment.replies?.length > 0 && (
             <div className="pl-6 mt-4 border-l border-gray-300 dark:border-gray-600">
               <DisplayComments
@@ -322,10 +329,10 @@ function DisplayComments({
                 token={token}
                 activeReply={activeReply}
                 setActiveReply={setActiveReply}
-                currentPopup={currentPopup}
-                setCurrentPopup={setCurrentPopup}
                 currentEditComment={currentEditComment}
                 setCurrentEditComment={setCurrentEditComment}
+                updatedCommentContent={updatedCommentContent}
+                setUpdatedCommentContent={setUpdatedCommentContent}
                 creatorId={creatorId}
               />
             </div>

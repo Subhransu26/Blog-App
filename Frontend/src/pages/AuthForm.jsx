@@ -192,10 +192,10 @@ function AuthForm({ type }) {
                 )}
               </div>
 
-              <div>
+              <div className="mb-4">
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
                 >
                   Password
                 </label>
@@ -207,27 +207,25 @@ function AuthForm({ type }) {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Enter your password"
-                    className="mt-1 w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 pr-11 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200"
                   />
-                  <div className="absolute inset-y-0 right-3 flex items-center space-x-2">
-                    <span
-                      role="button"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      className="text-xl text-white cursor-pointer"
-                    >
-                      {showPassword ? (
-                        <i className="fi fi-br-eye"></i>
-                      ) : (
-                        <i className="fi fi-br-eye-crossed"></i>
-                      )}
-                    </span>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 dark:text-gray-300 hover:text-purple-500 dark:hover:text-purple-400 text-xl"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <i className="fi fi-br-eye"></i>
+                    ) : (
+                      <i className="fi fi-br-eye-crossed"></i>
+                    )}
+                  </button>
                 </div>
                 {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                  <p className="text-red-500 text-sm mt-2">{errors.password}</p>
                 )}
               </div>
 

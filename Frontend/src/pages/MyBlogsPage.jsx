@@ -37,7 +37,7 @@ const MyBlogsPage = () => {
   if (loading) return <Spinner message="Loading your blogs..." />;
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-zinc-900 px-6 py-10 text-black dark:text-white transition-colors">
+    <div className="min-h-screen bg-gray-100  dark:bg-gray-900 px-6 py-10 text-black dark:text-white transition-colors">
       <div className="max-w-6xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold mb-6 text-center">My Blogs</h1>
 
@@ -66,14 +66,15 @@ const MyBlogsPage = () => {
                   </p>
                   <div className="flex justify-between items-center text-sm mt-2">
                     <span className="text-indigo-500">
-                      {blog.likes?.length ?? 0} ❤️
+                      ❤️ {blog.likes?.length || 0}
                     </span>
+                    <span>💬 {blog.comments?.length || 0}</span>
                     {blog.draft && (
                       <span className="text-yellow-500 font-medium">Draft</span>
                     )}
                   </div>
                   <Link
-                    to={`/blogs/${blog._id}`}
+                    to={`/blogs/${blog.blogId}`}
                     className="inline-block mt-3 text-indigo-600 dark:text-indigo-400 hover:underline text-sm"
                   >
                     View Blog →

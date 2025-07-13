@@ -48,12 +48,12 @@ async function addComment(req, res) {
       comment,
       blog: blog._id,
       user: creator,
-    }).then((comment) => {
-      return comment.populate({
-        path: "user",
-        select: "name email username profilePic",
-      });
     });
+
+    newComment = await newComment.populate(
+      "user",
+      "name email username profilePic"
+    );
 
     // Push to Blog
     await Blog.findByIdAndUpdate(blog._id, {
@@ -278,10 +278,35 @@ async function addNestedComment(req, res) {
   }
 }
 
+// GET /api/v1/blogs/comments/:id        
+async function getComments(req, res) {
+  try {
+    const { id: blogId } = req.params;
+
+    const comments = await Comment.find({ blog: blogId, parentComment: null })
+      .populate("user", "name username profilePic")
+      .populate({
+        path: "replies",
+        populate: {
+          path: "user",
+          select: "name username profilePic",
+        },
+      });
+
+    return res.status(200).json({ success: true, comments });
+  } catch (error) {
+    console.error("getComments error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch comments" });
+  }
+}
+
 module.exports = {
   addComment,
   deleteComment,
   editComment,
   likeComment,
   addNestedComment,
+  getComments,
 };
