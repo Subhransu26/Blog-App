@@ -199,16 +199,18 @@ async function getBlog(req, res) {
   try {
     const { id } = req.params;
 
-    const blog = await Blog.findOne({ blogId: id })
-      .select("_id title content image blogId likes")
+    const blog = await Blog.findById(id)
+      .select(
+        "_id title content image blogId likes comments creator createdAt tags"
+      )
       .populate({
         path: "creator",
         select: "name username email followers profilePic",
       })
       .populate({
         path: "comments",
-        match: { parentComment: null }, // only top-level comments
-        options: { sort: { createdAt: -1 } }, // latest first
+        match: { parentComment: null },
+        options: { sort: { createdAt: -1 } },
         populate: [
           {
             path: "user",
@@ -216,7 +218,7 @@ async function getBlog(req, res) {
           },
           {
             path: "replies",
-            options: { sort: { createdAt: 1 } }, // oldest first for replies
+            options: { sort: { createdAt: 1 } },
             populate: {
               path: "user",
               select: "name username email profilePic",
@@ -225,6 +227,8 @@ async function getBlog(req, res) {
         ],
       })
       .lean();
+
+    console.log("📥 Blog.likes = ", blog.likes);
 
     if (!blog) {
       return res.status(404).json({

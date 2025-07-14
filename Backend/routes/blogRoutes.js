@@ -36,15 +36,18 @@ route.post(
   createBlog
 );
 
-route.post("/upload-image", verifyUser, upload.single("image"), uploadEditorImage);
+route.post(
+  "/upload-image",
+  verifyUser,
+  upload.single("image"),
+  uploadEditorImage
+);
 
 route.get("/blogs", getBlogs);
 
 route.get("/blogs/user", verifyUser, getUserBlogs);
 
 route.get("/blogs/:id", getBlog);
-
-
 
 route.put(
   "/blogs/:id",
@@ -68,7 +71,11 @@ route.put("/blogs/edit-comment/:id", verifyUser, editComment);
 route.patch("/blogs/like-comment/:id", verifyUser, likeComment);
 
 // for nested comment
-route.post("/blogs/:blogId/comments/:parentCommentId", verifyUser, addNestedComment);
+route.post(
+  "/blogs/:blogId/comments/:parentCommentId",
+  verifyUser,
+  addNestedComment
+);
 
 route.get("/blogs/comment/:id", getComments);
 

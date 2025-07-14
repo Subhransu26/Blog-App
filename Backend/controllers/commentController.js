@@ -208,18 +208,13 @@ async function likeComment(req, res) {
   }
 }
 
-
 // Nested Comment
 // request :- post
+// route :- /api/v1/blogs/:blogId/comments/:parentCommentId
 async function addNestedComment(req, res) {
   const { parentCommentId, blogId } = req.params;
   const { reply } = req.body;
   const userId = req.user?._id;
-
-  console.log("💬 blogId:", blogId);
-  console.log("↩️ parentCommentId:", parentCommentId);
-  console.log("📝 reply:", reply);
-  console.log("👤 userId:", userId);
 
   if (!reply || !reply.trim()) {
     return res
@@ -247,6 +242,7 @@ async function addNestedComment(req, res) {
 
     const populatedReply = await Comment.findById(newReply._id)
       .populate("user", "name profilePic")
+      .populate("parentComment", "comment user")
       .lean();
 
     res.status(201).json({
@@ -255,7 +251,7 @@ async function addNestedComment(req, res) {
       data: populatedReply,
     });
   } catch (err) {
-    console.error("❌ addNestedComment error:", err);
+    console.error("addNestedComment error:", err);
     res
       .status(500)
       .json({ success: false, message: "Server error while adding reply" });

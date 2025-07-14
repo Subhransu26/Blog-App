@@ -30,6 +30,8 @@ const BlogDetail = () => {
         `${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`
       );
       const fetchedBlog = res.data.blog;
+      console.log("📥 Blog fetched from server:", res.data.blog);
+
       setBlog(fetchedBlog);
       dispatch(addSelectedBlog(fetchedBlog));
     } catch (err) {
@@ -39,16 +41,18 @@ const BlogDetail = () => {
     }
   };
 
-  // ✅ Fix: set isLike after blog and userId are both loaded
   useEffect(() => {
     if (blog && userId) {
       const liked = blog.likes?.some((id) => id.toString() === userId);
       setIsLike(liked);
+      console.log("❤️ isLike =", liked);
     }
   }, [blog, userId]);
 
   const handleLike = async () => {
     if (!token) return toast.error("Please sign in to like this blog");
+
+    console.log("👆 Like button clicked");
 
     try {
       const res = await axios.post(
@@ -58,18 +62,26 @@ const BlogDetail = () => {
       );
 
       const updated = res.data.isLiked;
+      console.log("✅ Server responded. isLiked:", updated);
+
       setIsLike(updated);
-      dispatch(changeLikes(userId));
+
+      const updatedLikes = updated
+        ? [...blog.likes, userId]
+        : blog.likes.filter((id) => id.toString() !== userId);
+
+      console.log("📦 Updated likes array:", updatedLikes);
 
       setBlog((prev) => ({
         ...prev,
-        likes: updated
-          ? [...prev.likes, userId]
-          : prev.likes.filter((id) => id.toString() !== userId),
+        likes: updatedLikes,
       }));
+
+      dispatch(addSelectedBlog({ ...blog, likes: updatedLikes }));
 
       toast.success(res.data.message);
     } catch (err) {
+      console.error("❌ Failed to like blog", err);
       toast.error("Failed to like blog");
     }
   };
@@ -186,6 +198,7 @@ const BlogDetail = () => {
                 onClick={handleLike}
                 className="flex items-center gap-1 cursor-pointer hover:text-black dark:hover:text-white transition"
               >
+                {console.log("❤️ isLike =", isLike)}
                 <i
                   className={`${
                     isLike ? "fi fi-sr-heart text-red-500" : "fi fi-rr-heart"
