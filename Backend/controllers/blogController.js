@@ -481,10 +481,8 @@ async function likeBlog(req, res) {
       ? { $pull: { likes: userId } }
       : { $addToSet: { likes: userId } };
 
-    const updatedBlog = await Blog.findOneAndUpdate({ blogId }, update, {
-      new: true,
-      select: "likes",
-    });
+    await Blog.findOneAndUpdate({ blogId }, update);
+    const updatedBlog = await Blog.findOne({ blogId }).select("likes");
 
     const userUpdate = alreadyLiked ? "$pull" : "$addToSet";
     await User.findByIdAndUpdate(userId, {
@@ -522,11 +520,15 @@ async function saveBlog(req, res) {
 
     const user = await User.findById(userId);
 
-    const alreadySaved = blog.totalSaves.includes(userId);
+    const alreadySaved = Array.isArray(blog.totalSaves)
+      ? blog.totalSaves.includes(userId)
+      : false;
 
     if (!alreadySaved) {
-      await Blog.findByIdAndUpdate(blog._id, { $push: { totalSaves: userId } });
-      await User.findByIdAndUpdate(userId, { $push: { saveBlogs: blog._id } });
+      await Promise.all([
+        Blog.findByIdAndUpdate(blog._id, { $push: { totalSaves: userId } }),
+        User.findByIdAndUpdate(userId, { $push: { saveBlogs: blog._id } }),
+      ]);
 
       return res.status(200).json({
         success: true,

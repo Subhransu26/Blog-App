@@ -85,7 +85,7 @@ function Navbar() {
                 About
               </NavLink>
 
-              {user && (
+              {user.token && (
                 <NavLink
                   to="/add-blog"
                   className={({ isActive }) =>
@@ -101,7 +101,7 @@ function Navbar() {
                 </NavLink>
               )}
 
-              {!user._id ? (
+              {!user.token ? (
                 <>
                   <Link
                     to="/login"
@@ -195,7 +195,7 @@ function Navbar() {
             About
           </NavLink>
 
-          {user ? (
+          {user.token ? (
             <>
               <Link
                 to="/add-blog"

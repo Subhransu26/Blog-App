@@ -3,16 +3,17 @@ import { createSlice } from "@reduxjs/toolkit";
 // If no user Loggeg in
 const defaultState = {
   token: null,
+  userId: null,
   name: null,
   username: null,
   email: null,
-  _id: null,
   profilePic: null,
   followers: [],
   following: [],
   bio: "",
 };
 
+// Load from localStorage
 let storedUser = {};
 try {
   const userData = localStorage.getItem("user");
@@ -22,7 +23,6 @@ try {
   storedUser = {};
 }
 
-// Merge with default state
 const initialState = {
   ...defaultState,
   ...storedUser,
@@ -36,10 +36,12 @@ const userSlice = createSlice({
   reducers: {
     login(state, action) {
       const { user, token } = action.payload;
+      const { _id, ...rest } = user;
 
       const userData = {
-        ...user, // flatten user fields
         token,
+        userId: _id,
+        ...rest,
         followers: user.followers || [],
         following: user.following || [],
       };
@@ -48,13 +50,11 @@ const userSlice = createSlice({
       Object.assign(state, userData);
     },
 
-    // for logout
     logout() {
       localStorage.removeItem("user");
       return { ...defaultState };
     },
 
-    // for update
     updateData(state, action) {
       const data = action.payload;
 
