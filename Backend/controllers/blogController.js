@@ -198,8 +198,9 @@ async function getBlogs(req, res) {
 async function getBlog(req, res) {
   try {
     const { id } = req.params;
+    console.log("📩 Received blogId param:", id);
 
-    const blog = await Blog.findById(id)
+    const blog = await Blog.findOne({ blogId: id })
       .select(
         "_id title content image blogId likes comments creator createdAt tags"
       )
@@ -227,6 +228,7 @@ async function getBlog(req, res) {
         ],
       })
       .lean();
+    console.log("🔍 Blog result:", blog);
 
     console.log("📥 Blog.likes = ", blog.likes);
 
@@ -466,12 +468,13 @@ async function likeBlog(req, res) {
     const userId = req.user.id;
     const { id: blogId } = req.params;
 
-    // Find Blog by ID
     const blog = await Blog.findOne({ blogId });
-    if (!blog)
-      return res
-        .status(404)
-        .json({ success: false, message: "Blog not found" });
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
 
     const alreadyLiked = blog.likes.includes(userId);
     const update = alreadyLiked
@@ -484,11 +487,9 @@ async function likeBlog(req, res) {
     });
 
     const userUpdate = alreadyLiked ? "$pull" : "$addToSet";
-    await User.findByIdAndUpdate(
-      userId,
-      { [userUpdate]: { likeBlogs: blog._id } },
-      { new: false }
-    );
+    await User.findByIdAndUpdate(userId, {
+      [userUpdate]: { likeBlogs: blog._id },
+    });
 
     return res.status(200).json({
       success: true,
@@ -498,7 +499,7 @@ async function likeBlog(req, res) {
       likes: updatedBlog.likes,
     });
   } catch (err) {
-    console.error("likeBlog:", err);
+    console.error("likeBlog error:", err);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 }
