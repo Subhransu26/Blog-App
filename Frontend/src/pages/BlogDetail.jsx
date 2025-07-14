@@ -203,7 +203,12 @@ const BlogDetail = () => {
                 className="flex items-center gap-1 cursor-pointer hover:text-black dark:hover:text-white transition"
               >
                 <i className="fi fi-rr-comment text-lg"></i>
-                <span className="ml-1">{blog.comments?.length || 0}</span>
+                <span className="ml-1">
+                  {blog.comments?.reduce(
+                    (acc, comment) => acc + 1 + (comment.replies?.length || 0),
+                    0
+                  ) || 0}
+                </span>
               </div>
             </div>
 

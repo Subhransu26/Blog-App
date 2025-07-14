@@ -92,18 +92,12 @@ export default function Comment() {
 }
 
 /*  ──────────  recursive comment tree  ──────────  */
-function DisplayComments({
-  comments = [],
-  blogId,
-  userId,
-  token,
-  creatorId,
-}) {
+function DisplayComments({ comments = [], blogId, userId, token, creatorId }) {
   const dispatch = useDispatch();
 
   /* local UI state (per branch) */
-  const [replyBox, setReplyBox] = useState(null);          // comment._id currently replying to
-  const [editBox, setEditBox] = useState(null);            // comment._id currently editing
+  const [replyBox, setReplyBox] = useState(null); // comment._id currently replying to
+  const [editBox, setEditBox] = useState(null); // comment._id currently editing
   const [reply, setReply] = useState("");
   const [editText, setEditText] = useState("");
 
@@ -111,15 +105,17 @@ function DisplayComments({
     headers: { Authorization: `Bearer ${token}` },
   };
 
-  /* endpoints ------------------------------------------------ */
   const replyURL = (parentId) =>
-    `${import.meta.env.VITE_BACKEND_URL}/blogs/${blogId}/comments/${parentId}/reply`;
+    `${import.meta.env.VITE_BACKEND_URL}/blogs/${blogId}/comments/${parentId}`;
 
-  /* handlers ------------------------------------------------- */
   const addReply = async (parentId) => {
     if (!reply.trim()) return toast.error("Reply cannot be empty");
     try {
-      const { data } = await axios.post(replyURL(parentId), { reply }, axiosAuth);
+      const { data } = await axios.post(
+        replyURL(parentId),
+        { reply },
+        axiosAuth
+      );
       dispatch(setReplies(data.data || data.newReply));
       setReply("");
       setReplyBox(null);
@@ -190,7 +186,9 @@ function DisplayComments({
             <img
               src={
                 c.user?.profilePic ||
-                `https://api.dicebear.com/9.x/initials/svg?seed=${c.user?.name || "U"}`
+                `https://api.dicebear.com/9.x/initials/svg?seed=${
+                  c.user?.name || "U"
+                }`
               }
               alt={c.user?.name || "User"}
               className="h-8 w-8 rounded-full object-cover"
@@ -213,10 +211,15 @@ function DisplayComments({
 
               {/* action row */}
               <div className="mt-2 flex gap-4 text-sm text-gray-600 dark:text-gray-400">
-                <button onClick={() => likeComment(c._id)} className="flex items-center gap-1">
+                <button
+                  onClick={() => likeComment(c._id)}
+                  className="flex items-center gap-1"
+                >
                   <i
                     className={
-                      c.likes?.includes(userId) ? "fi fi-sr-heart text-red-500" : "fi fi-rr-heart"
+                      c.likes?.includes(userId)
+                        ? "fi fi-sr-heart text-red-500"
+                        : "fi fi-rr-heart"
                     }
                   />
                   <span>{c.likes?.length}</span>

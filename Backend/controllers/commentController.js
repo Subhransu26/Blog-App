@@ -13,7 +13,9 @@ const addComment = async (req, res) => {
     // Ensure blog exists
     const blog = await Blog.findById(blogId);
     if (!blog) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Blog not found" });
     }
 
     // Create new comment
@@ -59,12 +61,16 @@ async function deleteComment(req, res) {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid comment ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid comment ID" });
     }
 
     const comment = await Comment.findById(id);
     if (!comment) {
-      return res.status(404).json({ success: false, message: "Comment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Comment not found" });
     }
 
     if (comment.user.toString() !== userId.toString()) {
@@ -105,7 +111,9 @@ async function editComment(req, res) {
     const { comment } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid comment ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid comment ID" });
     }
 
     if (!comment || comment.trim() === "") {
@@ -160,12 +168,16 @@ async function likeComment(req, res) {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid comment ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid comment ID" });
     }
 
     const comment = await Comment.findById(id);
     if (!comment) {
-      return res.status(404).json({ success: false, message: "Comment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Comment not found" });
     }
 
     const alreadyLiked = comment.likes.includes(userId);
@@ -196,21 +208,31 @@ async function likeComment(req, res) {
   }
 }
 
-// Add Nested Comment (Reply)
-// POST /api/v1/comment/:parentCommentId/:id
+
+// Nested Comment
+// request :- post
 async function addNestedComment(req, res) {
-  const { parentCommentId, id: blogId } = req.params;
+  const { parentCommentId, blogId } = req.params;
   const { reply } = req.body;
-  const userId = req.user._id;
+  const userId = req.user?._id;
+
+  console.log("💬 blogId:", blogId);
+  console.log("↩️ parentCommentId:", parentCommentId);
+  console.log("📝 reply:", reply);
+  console.log("👤 userId:", userId);
 
   if (!reply || !reply.trim()) {
-    return res.status(400).json({ success: false, message: "Reply cannot be empty" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Reply cannot be empty" });
   }
 
   try {
     const parentComment = await Comment.findById(parentCommentId);
     if (!parentComment) {
-      return res.status(404).json({ success: false, message: "Parent comment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Parent comment not found" });
     }
 
     const newReply = await Comment.create({
@@ -233,8 +255,10 @@ async function addNestedComment(req, res) {
       data: populatedReply,
     });
   } catch (err) {
-    console.error("addNestedComment error:", err);
-    res.status(500).json({ success: false, message: "Server error while adding reply" });
+    console.error("❌ addNestedComment error:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error while adding reply" });
   }
 }
 
