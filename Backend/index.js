@@ -4,14 +4,19 @@ const cors = require("cors");
 const dbConnect = require("./config/dbConnect");
 const cloudinaryConfig = require("./config/cloudinaryConfig");
 const { PORT, FRONTEND_URL } = require("./config/dotenv.config");
+const dotenv = require("dotenv");
+const fs = require("fs");
 
+
+dotenv.config();
+
+
+// API routes
 const userRoutes = require("./routes/userRoutes");
 const blogRoutes = require("./routes/blogRoutes");
 
 const app = express();
 const port = PORT || 5000;
-
-app.set("trust proxy", 1);
 
 app.use(
   cors({
@@ -20,21 +25,26 @@ app.use(
   })
 );
 
-// Middleware
 app.use(express.json());
 
-// Connect to DB and Cloudinary
+// Connect DB & Cloudinary
 dbConnect();
 cloudinaryConfig();
 
-// Routes
+// API routes
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", blogRoutes);
 
-// Serve frontend
-app.use("/", express.static(path.join(__dirname, "../Frontend/dist")));
+// Serve static files
+const frontendPath = path.resolve(__dirname, "../Frontend/dist");
+app.use(express.static(frontendPath));
+
+// // ✅ Correct fallback route
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(frontendPath, "index.html"));
+// });
+
 
 app.listen(port, () => {
   console.log(`✅ Server started at http://localhost:${port}`);
-  console.log(`✅ Allowed Origin: ${FRONTEND_URL}`);
 });

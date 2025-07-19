@@ -67,7 +67,7 @@ route.post("/blogs/like/:id", verifyUser, likeBlog);
 // comment
 route.post("/blogs/comment/:id", verifyUser, addComment);
 route.delete("/blogs/comment/:id", verifyUser, deleteComment);
-route.put("/blogs/edit-comment/:id", verifyUser, editComment);
+route.patch("/blogs/edit-comment/:id", verifyUser, editComment);
 route.patch("/blogs/like-comment/:id", verifyUser, likeComment);
 
 // for nested comment
@@ -77,6 +77,6 @@ route.post(
   addNestedComment
 );
 
-route.get("/blogs/comment/:id", getComments);
+route.get("/blogs/:id/comments", getComments);
 
 module.exports = route;
