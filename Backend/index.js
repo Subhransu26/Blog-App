@@ -11,7 +11,8 @@ const blogRoutes = require("./routes/blogRoutes");
 const app = express();
 const port = PORT || 5000;
 
-// Enable CORS
+app.set("trust proxy", 1);
+
 app.use(
   cors({
     origin: ["http://localhost:5173", FRONTEND_URL],
@@ -26,15 +27,14 @@ app.use(express.json());
 dbConnect();
 cloudinaryConfig();
 
-// API routes
+// Routes
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", blogRoutes);
 
-// Serve frontend build files
+// Serve frontend
 app.use("/", express.static(path.join(__dirname, "../Frontend/dist")));
 
-
-// Start server
 app.listen(port, () => {
   console.log(`✅ Server started at http://localhost:${port}`);
+  console.log(`✅ Allowed Origin: ${FRONTEND_URL}`);
 });
