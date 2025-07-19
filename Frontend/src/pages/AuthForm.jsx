@@ -77,7 +77,9 @@ function AuthForm({ type }) {
     setLoading(true);
     try {
       const endpoint = type.toLowerCase();
-      const res = await axios.post(`${baseUrl}/${endpoint}`, formData);
+      const res = await axios.post(`${baseUrl}/${endpoint}`, formData, {
+        withCredentials: true,
+      });
       const { user, token, message } = res.data;
 
       if (!isLogin) {
