@@ -36,9 +36,7 @@ const EditBlog = () => {
 
   const fetchBlog = async () => {
     try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`
-      );
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`);
       const blog = res.data.blog;
 
       setBlogData({
@@ -78,17 +76,14 @@ const EditBlog = () => {
   useEffect(() => {
     if (!loading && blogData.content && !editorjsRef.current) {
       const parsedContent = JSON.parse(blogData.content);
-      // Delay initialization to ensure #editorjs is in DOM
       setTimeout(() => {
         const editorHolder = document.getElementById("editorjs");
         if (editorHolder) initializeEditor(parsedContent);
       }, 0);
     }
+
     return () => {
-      if (
-        editorjsRef.current?.destroy &&
-        typeof editorjsRef.current.destroy === "function"
-      ) {
+      if (editorjsRef.current?.destroy && typeof editorjsRef.current.destroy === "function") {
         editorjsRef.current.destroy();
         editorjsRef.current = null;
       }
@@ -112,28 +107,28 @@ const EditBlog = () => {
           config: {
             uploader: {
               uploadByFile: async (file) => {
-                // Real upload example to Cloudinary (replace with your own config)
                 const formData = new FormData();
-                formData.append("file", file);
-                formData.append("upload_preset", "your_upload_preset");
+                formData.append("image", file);
 
                 try {
-                  const response = await fetch(
-                    "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
+                  const res = await axios.post(
+                    `${import.meta.env.VITE_BACKEND_URL}/upload-image`,
+                    formData,
                     {
-                      method: "POST",
-                      body: formData,
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
+                      },
                     }
                   );
-                  const data = await response.json();
                   return {
                     success: 1,
                     file: {
-                      url: data.secure_url,
+                      url: res.data.imageUrl,
                     },
                   };
                 } catch (error) {
-                  toast.error("Image upload failed");
+                  toast.error("Inline image upload failed");
                   return { success: 0 };
                 }
               },
@@ -167,7 +162,6 @@ const EditBlog = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (loading || submitting) return;
 
     if (!blogData.content) {
@@ -176,14 +170,10 @@ const EditBlog = () => {
     }
 
     setSubmitting(true);
-
     const formData = new FormData();
     formData.append("title", blogData.title);
     formData.append("description", blogData.description);
-    formData.append(
-      "tags",
-      JSON.stringify(blogData.tags.split(",").map((t) => t.trim()))
-    );
+    formData.append("tags", JSON.stringify(blogData.tags.split(",").map((t) => t.trim())));
     formData.append("content", blogData.content);
     formData.append("draft", blogData.draft);
     if (blogData.image) formData.append("image", blogData.image);
@@ -219,52 +209,55 @@ const EditBlog = () => {
           onSubmit={handleSubmit}
           className="space-y-8 bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md p-8"
         >
+          {/* Title */}
           <div>
             <label className="block text-lg font-semibold mb-2">Title</label>
             <input
               name="title"
               value={blogData.title}
               onChange={handleChange}
-              className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600"
               placeholder="Enter blog title"
               required
             />
           </div>
 
+          {/* Description */}
           <div>
-            <label className="block text-lg font-semibold mb-2">
-              Description
-            </label>
+            <label className="block text-lg font-semibold mb-2">Description</label>
             <textarea
               name="description"
               value={blogData.description}
               onChange={handleChange}
-              className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600"
               rows="3"
               placeholder="Brief description of your blog"
               required
             />
           </div>
 
+          {/* Tags */}
           <div>
             <label className="block text-lg font-semibold mb-2">Tags</label>
             <input
               name="tags"
               value={blogData.tags}
               onChange={handleChange}
-              className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg border border-gray-300 dark:border-gray-600"
               placeholder="Comma-separated tags (e.g., react, dev, ai)"
             />
           </div>
 
+          {/* EditorJS Content */}
           <div>
             <label className="block text-lg font-semibold mb-2">Content</label>
             <div
               id="editorjs"
-              className="min-h-[300px] p-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-white"
+              className="min-h-[300px] p-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
             />
           </div>
 
+          {/* Thumbnail */}
           <div>
             <label className="block text-lg font-semibold mb-2">Thumbnail</label>
             <div className="mb-4">
@@ -283,6 +276,7 @@ const EditBlog = () => {
             />
           </div>
 
+          {/* Draft checkbox */}
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
@@ -294,18 +288,16 @@ const EditBlog = () => {
             <label className="text-lg font-medium">Save as Draft</label>
           </div>
 
+          {/* Submit & Cancel */}
           <button
             type="submit"
             disabled={submitting}
-            className={`w-full py-3 text-lg font-semibold rounded-lg transition-all duration-200 ${
-              submitting
-                ? "bg-blue-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+            className={`w-full py-3 text-lg font-semibold rounded-lg ${
+              submitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
             } text-white shadow-lg`}
           >
             {submitting ? "Updating..." : "Update Blog"}
           </button>
-
           <button
             type="button"
             onClick={() => navigate(-1)}
